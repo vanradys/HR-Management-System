@@ -12,49 +12,49 @@ export default function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-  if (!email || !password) {
-    setError('Email dan password wajib diisi.');
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.message || 'Login gagal.');
+    if (!email || !password) {
+      setError('Email dan password wajib diisi.');
       return;
     }
 
-    localStorage.setItem('hrptaa_token', data.token);
-    localStorage.setItem('hrptaa_auth_user', JSON.stringify(data.user));
+    setLoading(true);
 
-    onLogin(data.user.name, data.user.email, data.user.role);
-    navigate('/');
-  } catch (error) {
-    setError('Tidak dapat terhubung ke server backend.');
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Login gagal.');
+        return;
+      }
+
+      localStorage.setItem('hrptaa_token', data.token);
+      localStorage.setItem('hrptaa_auth_user', JSON.stringify(data.user));
+
+      onLogin(data.user.name, data.user.email, data.user.role);
+      navigate('/');
+    } catch (error) {
+      setError('Tidak dapat terhubung ke server backend.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#F8FAFC' }}>
