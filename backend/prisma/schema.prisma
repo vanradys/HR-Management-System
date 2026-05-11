@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String
+  status       String   @default("Aktif")
+  employee     Employee?
+  createdAt    DateTime @default(now())
+}
+
+model Employee {
+  id               Int      @id @default(autoincrement())
+  userId           Int?     @unique
+  user             User?    @relation(fields: [userId], references: [id])
+  employeeId       String   @unique
+  name             String
+  department       String
+  position         String
+  phone            String?
+  address          String?
+  joinDate         String?
+  employmentStatus String   @default("Aktif")
+  createdAt        DateTime @default(now())
+
+  attendances      Attendance[]
+  leaveRequests    LeaveRequest[]
+  shifts           Shift[]
+}
+
+model Attendance {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  checkIn    String?
+  checkOut   String?
+  status     String
+  latitude   Float?
+  longitude  Float?
+  photoUrl   String?
+  date       String
+  createdAt  DateTime @default(now())
+}
+
+model LeaveRequest {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  type       String
+  startDate  String
+  endDate    String
+  reason     String
+  status     String   @default("Pending")
+  createdAt  DateTime @default(now())
+}
+
+model Shift {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  date       String
+  shiftType  String
+  startTime  String?
+  endTime    String?
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
