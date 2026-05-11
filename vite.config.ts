@@ -5,7 +5,7 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/HR-Management-System/",
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
