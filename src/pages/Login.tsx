@@ -53,7 +53,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     setError('Tidak dapat terhubung ke server backend.');
   } finally {
     setLoading(false);
-  };
+  }
+};
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#F8FAFC' }}>
