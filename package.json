@@ -1,13 +1,16 @@
 {
   "name": "hr-ptaa-reference-ui",
   "version": "1.0.0",
+  "homepage": "https://vanradys.github.io/HR-Management-System",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -71,6 +74,7 @@
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.9.2"
   }
 }
