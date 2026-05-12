@@ -19,12 +19,18 @@ export function useNotifications() {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   }, [setNotifications]);
 
-  const addNotification = useCallback((type: NotificationType, title: string, message: string) => {
+  const addNotification = useCallback((
+    type: NotificationType,
+    title: string,
+    message: string,
+    link?: string
+  ) => {
     const newNotif: AppNotification = {
       id: generateId(),
       type,
       title,
       message,
+      link,
       timestamp: getCurrentDatetime(),
       isRead: false,
     };

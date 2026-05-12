@@ -37,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ALL_ROLES },
   { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ALL_ROLES },
   { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ALL_ROLES },
-  { label: 'Chat', path: '/chat', icon: MessageCircle, allowedRoles: ALL_ROLES },{ label: 'Pengumuman', path: '/pengumuman', icon: Megaphone, allowedRoles: ALL_ROLES },
+  { label: 'Chat', path: '/chat', icon: MessageCircle, allowedRoles: ALL_ROLES },
   { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'Director', 'Finance', 'Karyawan'] },
   { label: 'Pengaturan', path: '/pengaturan', icon: Settings, allowedRoles: ['Admin'] },
 ];

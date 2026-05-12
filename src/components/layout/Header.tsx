@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, Settings, } from 'lucide-react';
+import { Bell, ChevronDown, LogOut, Settings,} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,12 +111,19 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
                       key={notif.id}
                       onClick={() => {
                         markRead(notif.id);
+
+                        if (notif.link) {
+                          navigate(notif.link);
+                        }
                       }}
-                      className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${!notif.isRead ? "bg-blue-50/60" : "bg-white"
+                      className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${!notif.read
+                        ? "bg-blue-50/60"
+                        : "bg-white"
                         }`}
                     >
                       <div className="flex items-start gap-3">
-                        {!notif.isRead && (
+                        {/* DOT */}
+                        {!notif.read && (
                           <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
                         )}
 

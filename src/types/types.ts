@@ -121,6 +121,7 @@ export interface AppNotification {
   message: string;
   timestamp: string;
   isRead: boolean;
+  link?: string;
 }
 
 export interface PayrollRecord {
