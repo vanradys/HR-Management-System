@@ -30,10 +30,11 @@ export function useNotifications() {
       type,
       title,
       message,
-      link,
       timestamp: getCurrentDatetime(),
       isRead: false,
+      link,
     };
+
     setNotifications(prev => [newNotif, ...prev]);
   }, [setNotifications]);
 

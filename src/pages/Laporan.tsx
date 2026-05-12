@@ -83,7 +83,7 @@ export default function Laporan() {
       r.id === detailReport.id ? { ...r, comments: [...r.comments, newComment] } : r
     ));
     setDetailReport(prev => prev ? { ...prev, comments: [...prev.comments, newComment] } : prev);
-    addNotification('report_comment', 'Komentar Ditambahkan', `Komentar Anda pada laporan "${detailReport.title}" berhasil dikirim.`);
+    addNotification('report_comment', 'Komentar Ditambahkan', `Komentar Anda pada laporan "${detailReport.title}" berhasil dikirim.`,'/laporan');
     toast({ title: 'Komentar Dikirim', description: 'Komentar berhasil ditambahkan.' });
     setCommentText('');
   }

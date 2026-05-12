@@ -43,7 +43,7 @@ export default function CutiIzin() {
       reason: form.reason, status: 'Pending', submittedAt: getCurrentDatetime(),
     };
     setLeaves(prev => [newReq, ...prev]);
-    addNotification('leave_approval', 'Pengajuan Diterima', `Pengajuan ${form.type} Anda sedang menunggu persetujuan.`);
+    addNotification('leave_approval', 'Pengajuan Diterima', `Pengajuan ${form.type} Anda sedang menunggu persetujuan.`,'/cuti-izin');
     toast({ title: 'Berhasil', description: `Pengajuan ${form.type} berhasil dikirim.` });
     setModalOpen(false);
     setForm({ type: 'Cuti', startDate: '', endDate: '', reason: '' });
@@ -51,7 +51,7 @@ export default function CutiIzin() {
 
   function handleApprove(id: string) {
     setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'Disetujui' } : l));
-    addNotification('leave_approval', 'Cuti/Izin Disetujui', 'Pengajuan cuti/izin Anda telah disetujui oleh atasan.');
+    addNotification('leave_approval', 'Cuti/Izin Disetujui', 'Pengajuan cuti/izin Anda telah disetujui oleh atasan.','/cuti-izin');
     toast({ title: 'Disetujui', description: 'Pengajuan berhasil disetujui.' });
   }
 

@@ -60,7 +60,7 @@ export default function Reimbursement() {
       paymentStatus: 'Belum Dibayar', submittedAt: getCurrentDatetime(),
     };
     setReimbursements(prev => [newReq, ...prev]);
-    addNotification('reimbursement_update', 'Reimbursement Dikirim', `Pengajuan reimbursement ${formatCurrency(newReq.amount)} sedang diproses.`);
+    addNotification('reimbursement_update', 'Reimbursement Dikirim', `Pengajuan reimbursement ${formatCurrency(newReq.amount)} sedang diproses.`, '/reimbursement');
     toast({ title: 'Berhasil', description: 'Pengajuan reimbursement berhasil dikirim.' });
     setModalOpen(false);
     setForm({ date: '', category: 'Transport', amount: '', description: '', proof: '' });
@@ -68,7 +68,7 @@ export default function Reimbursement() {
 
   function handleApprove(id: string) {
     setReimbursements(prev => prev.map(r => r.id === id ? { ...r, status: 'Disetujui' } : r));
-    addNotification('reimbursement_update', 'Reimbursement Disetujui', 'Pengajuan reimbursement Anda telah disetujui dan akan segera dibayarkan.');
+    addNotification('reimbursement_update', 'Reimbursement Disetujui', 'Pengajuan reimbursement Anda telah disetujui dan akan segera dibayarkan.','/reimbursement');
     toast({ title: 'Disetujui', description: 'Reimbursement berhasil disetujui.' });
   }
 

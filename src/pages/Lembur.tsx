@@ -34,7 +34,7 @@ export default function Lembur() {
       totalHours, reason: form.reason, status: 'Pending', submittedAt: getCurrentDatetime(),
     };
     setOvertime(prev => [newReq, ...prev]);
-    addNotification('overtime_approval', 'Pengajuan Lembur Dikirim', `Pengajuan lembur ${totalHours} jam sedang menunggu persetujuan.`);
+    addNotification('overtime_approval', 'Pengajuan Lembur Dikirim', `Pengajuan lembur ${totalHours} jam sedang menunggu persetujuan.`,'/lembur');
     toast({ title: 'Berhasil', description: `Pengajuan lembur ${totalHours} jam berhasil dikirim.` });
     setModalOpen(false);
     setForm({ date: '', startTime: '17:00', endTime: '20:00', reason: '' });
@@ -42,7 +42,7 @@ export default function Lembur() {
 
   function handleApprove(id: string) {
     setOvertime(prev => prev.map(o => o.id === id ? { ...o, status: 'Disetujui' } : o));
-    addNotification('overtime_approval', 'Lembur Disetujui', 'Pengajuan lembur Anda telah disetujui.');
+    addNotification('overtime_approval', 'Lembur Disetujui', 'Pengajuan lembur Anda telah disetujui.','/lembur');
     toast({ title: 'Disetujui', description: 'Pengajuan lembur berhasil disetujui.' });
   }
 

@@ -116,14 +116,14 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
                           navigate(notif.link);
                         }
                       }}
-                      className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${!notif.read
+                      className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${!notif.isRead
                         ? "bg-blue-50/60"
                         : "bg-white"
                         }`}
                     >
                       <div className="flex items-start gap-3">
                         {/* DOT */}
-                        {!notif.read && (
+                        {!notif.isRead && (
                           <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
                         )}
 
