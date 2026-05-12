@@ -57,10 +57,13 @@ export default function Absensi() {
 
   const todayStats = useMemo(() => {
     const today2 = attendance.filter(a => a.date === today);
+
     return {
       hadir: today2.filter(a => a.status === 'Hadir').length,
       terlambat: today2.filter(a => a.status === 'Terlambat').length,
-      cuti: today2.filter(a => ['Cuti', 'Sakit', 'Izin'].includes(a.status)).length,
+      cuti: today2.filter(a => a.status === 'Cuti').length,
+      izin: today2.filter(a => a.status === 'Izin').length,
+      sakit: today2.filter(a => a.status === 'Sakit').length,
       absen: today2.filter(a => a.status === 'Absen').length,
     };
   }, [attendance, today]);
@@ -92,11 +95,13 @@ export default function Absensi() {
             Check-out Sekarang
           </button>
         </div>
-        <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-gray-100">
           {[
             { label: 'Hadir', value: todayStats.hadir, color: 'text-green-600' },
             { label: 'Terlambat', value: todayStats.terlambat, color: 'text-amber-600' },
-            { label: 'Cuti/Izin', value: todayStats.cuti, color: 'text-blue-600' },
+            { label: 'Cuti', value: todayStats.cuti, color: 'text-blue-600' },
+            { label: 'Izin', value: todayStats.izin, color: 'text-cyan-600' },
+            { label: 'Sakit', value: todayStats.sakit, color: 'text-purple-600' },
             { label: 'Absen', value: todayStats.absen, color: 'text-red-600' },
           ].map(s => (
             <div key={s.label} className="text-center">
