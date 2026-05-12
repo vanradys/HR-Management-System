@@ -70,12 +70,38 @@ export default function Payroll() {
         </div>
       </div>
 
+      <div className="flex gap-3 mt-3">
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          className="border border-gray-200 rounded-xl px-4 py-2 text-sm"
+        >
+          {[
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+          ].map((month, index) => (
+            <option key={month} value={index + 1}>{month}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="border border-gray-200 rounded-xl px-4 py-2 text-sm"
+        >
+          {[2025, 2026, 2027, 2028].map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Penggajian', value: formatCurrency(totalPayroll), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: DollarSign },
-          { label: 'Jumlah Karyawan', value: payroll.length + ' orang', color: 'text-green-700', bg: 'bg-green-50 border-green-200', icon: FileText },
-          { label: 'Rata-rata Gaji', value: formatCurrency(totalPayroll / (payroll.length || 1)), color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: DollarSign },
+          { label: 'Total Penggajian', value: formatCurrency(totalPayroll), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+          { label: 'Total Reimbursement', value: formatCurrency(totalReimbursement), color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+          { label: 'Total Uang Lembur', value: formatCurrency(totalOvertime), color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+          { label: 'Total Potongan', value: formatCurrency(totalDeduction), color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} border rounded-xl p-4`}>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -96,9 +122,9 @@ export default function Payroll() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {payroll.length === 0 ? (
+              {filteredPayroll.length === 0 ? (
                 <tr><td colSpan={10} className="text-center py-10 text-gray-400">Tidak ada data penggajian</td></tr>
-              ) : payroll.map(p => (
+              ) : filteredPayroll.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50 transition-colors" data-testid={`row-payroll-${p.id}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
