@@ -104,7 +104,7 @@ export default function Chat() {
     activeRoom === "announcement"
       ? "Pengumuman perusahaan"
       : activeRoom === "group"
-      ? "Engineering, Production, HRD"
+      ? "Engineering, Production, Accounting"
       : selectedUser.status;
 
   const headerAvatar =
@@ -174,7 +174,7 @@ export default function Chat() {
                   Group Divisi
                 </p>
                 <p className="text-xs text-gray-500">
-                  Engineering, Production, HRD
+                  Engineering, Production, Accounting
                 </p>
               </div>
             </button>
@@ -227,94 +227,116 @@ export default function Chat() {
         </div>
 
         {/* Chat Area */}
-        <div className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
-                {headerAvatar}
-              </div>
+<div className="lg:col-span-3 bg-white border border-gray-100 rounded-[28px] shadow-sm flex flex-col overflow-hidden">
 
-              <div>
-                <h2 className="font-bold text-gray-900 text-lg">
-                  {headerTitle}
-                </h2>
+  {/* Header */}
+  <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
+    
+    <div className="flex items-center gap-3">
 
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`w-2 h-2 rounded-full ${headerStatusColor}`}
-                  />
-                  <p className="text-xs text-gray-500">{headerSubtitle}</p>
-                </div>
-              </div>
-            </div>
+      <div className="relative">
+        <div className="w-12 h-12 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold text-lg">
+          {headerAvatar}
+        </div>
 
-            <MoreVertical className="w-5 h-5 text-gray-500" />
-          </div>
+        <span
+          className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${headerStatusColor}`}
+        />
+      </div>
 
-          {/* Messages */}
-          <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-gray-50">
-            <div className="flex justify-center">
-              <span className="px-4 py-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-full">
-                Hari ini
-              </span>
-            </div>
+      <div>
+        <h2 className="font-bold text-gray-900 text-lg leading-tight">
+          {headerTitle}
+        </h2>
 
-            {visibleMessages.map((msg) => {
-              const isMe = msg.sender === "me";
+        <p className="text-sm text-gray-500">
+          {headerSubtitle}
+        </p>
+      </div>
+    </div>
 
-              return (
-                <div
-                  key={msg.id}
-                  className={isMe ? "flex justify-end" : "flex justify-start"}
-                >
-                  <div
-                    className={
-                      isMe
-                        ? "max-w-[70%] rounded-2xl rounded-br-sm px-4 py-3 text-sm bg-[#001E8A] text-white shadow-sm"
-                        : "max-w-[70%] rounded-2xl rounded-bl-sm px-4 py-3 text-sm bg-white text-gray-800 border border-gray-100 shadow-sm"
-                    }
-                  >
-                    <p>{msg.text}</p>
+    <MoreVertical className="w-5 h-5 text-gray-400" />
+  </div>
 
-                    <p
-                      className={
-                        isMe
-                          ? "text-[10px] mt-1 text-blue-100"
-                          : "text-[10px] mt-1 text-gray-400"
-                      }
-                    >
-                      {msg.time} {isMe && "✓✓"}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+  {/* Messages */}
+  <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
 
-          {/* Input */}
-          <div className="p-4 border-t border-gray-100 flex gap-3 bg-white">
-            <input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  sendMessage();
-                }
-              }}
-              placeholder="Tulis pesan..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400"
-            />
+    <div className="space-y-5">
 
-            <button
-              onClick={sendMessage}
-              className="px-6 py-3 rounded-xl bg-[#001E8A] text-white font-semibold hover:bg-blue-900 flex items-center gap-2"
+      <div className="flex items-center gap-4">
+        <div className="h-px bg-gray-100 flex-1" />
+
+        <span className="text-xs text-gray-400">
+          Hari ini
+        </span>
+
+        <div className="h-px bg-gray-100 flex-1" />
+      </div>
+
+      {visibleMessages.map((msg) => {
+        const isMe = msg.sender === "me";
+
+        return (
+          <div
+            key={msg.id}
+            className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
+                isMe
+                  ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
+                  : "bg-gray-100 text-gray-800 rounded-[24px] rounded-bl-md"
+              }`}
             >
-              <Send className="w-4 h-4" />
-              Kirim
-            </button>
+              <p className="leading-relaxed">
+                {msg.text}
+              </p>
+
+              <div
+                className={`mt-2 flex items-center justify-end gap-1 text-[10px] ${
+                  isMe ? "text-blue-100" : "text-gray-400"
+                }`}
+              >
+                <span>{msg.time}</span>
+
+                {isMe && <span>✓✓</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+    </div>
+  </div>
+
+  {/* Input */}
+  <div className="px-5 py-4 border-t border-gray-100 bg-white">
+
+    <div className="flex items-center gap-3">
+
+      <input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        }}
+        placeholder="Tulis pesan..."
+        className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-[#001E8A]"
+      />
+
+      <button
+        onClick={sendMessage}
+        className="w-14 h-14 rounded-2xl bg-[#001E8A] text-white flex items-center justify-center hover:bg-[#00166b]"
+      >
+        <Send className="w-5 h-5" />
+      </button>
+
+                        </div>
           </div>
         </div>
+
       </div>
     </div>
   );
