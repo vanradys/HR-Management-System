@@ -5,6 +5,7 @@ import type { PayrollRecord } from '@/types/types';
 import { SEED_PAYROLL } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatCurrency } from '@/utils/helpers';
+import { useAuth } from "@/hooks/useAuth";
 
 function getPayrollPeriod(month: number, year: number) {
   const startDate = new Date(year, month - 1, 21);
@@ -14,6 +15,7 @@ function getPayrollPeriod(month: number, year: number) {
 }
 
 export default function Payroll() {
+  const { auth } = useAuth();
   const [payroll] = useLocalStorage<PayrollRecord[]>('hrptaa_payroll', SEED_PAYROLL);
   const [slipTarget, setSlipTarget] = useState<PayrollRecord | null>(null);
 
@@ -60,6 +62,20 @@ export default function Payroll() {
     (sum, p) => sum + p.lateDeduction + p.absenceDeduction,
     0
   );
+
+  if (
+    auth.user?.role !== "HR" &&
+    auth.user?.role !== "Admin" &&
+    auth.user?.role !== "Finance"
+  ) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
+          Anda tidak memiliki akses ke halaman periode penggajian.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
