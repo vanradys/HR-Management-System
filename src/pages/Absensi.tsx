@@ -88,6 +88,14 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
     return "Alamat tidak ditemukan";
   }
 }
+const currentUser = {
+  email: "admin@adiyasa.com",
+  employeeId: "ADMIN_TEST",
+  employeeName: "Admin HR PTAA",
+  role: "Admin",
+};
+
+const isTestAdmin = currentUser.email === "admin@adiyasa.com";
 
   function handleCheckIn() {
   if (!selfiePreview) {
@@ -97,6 +105,19 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
     });
     return;
   }
+
+  const existing = attendance.find(
+  (a) => a.employeeId === currentUser.employeeId && a.date === today
+);
+
+if (existing?.checkIn && !isTestAdmin) {
+  toast({
+    title: "Check-in ditolak",
+    description: "Anda sudah melakukan check-in hari ini.",
+  });
+  return;
+}
+
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
@@ -126,7 +147,7 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
       setCurrentLocation(locationText);
 
       const existing = attendance.find(
-        (a) => a.employeeId === "EMP001" && a.date === today
+        (a) => a.employeeId === currentUser.employeeId && a.date === today
       );
 
       if (existing) {
@@ -144,15 +165,17 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
         );
       } else {
         const newRec: Attendance = {
-          id: generateId(),
-          employeeId: "EMP001",
-          employeeName: "Administrator",
-          date: today,
-          checkIn: nowTime,
-          checkOut: "",
-          status: nowTime > "08:30" ? "Terlambat" : "Hadir",
-          location: locationText,
-        };
+  id: generateId(),
+  employeeId: currentUser.employeeId,
+  employeeName: currentUser.employeeName,
+  date: today,
+  checkIn: nowTime,
+  checkOut: "",
+  status: nowTime > "08:30" ? "Terlambat" : "Hadir",
+  location: locationText,
+  isTestData: isTestAdmin,
+};
+
 
         setAttendance((prev) => [newRec, ...prev]);
       }
@@ -174,12 +197,43 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
 }
 
   function handleCheckOut() {
-    setAttendance(prev => prev.map(a => a.employeeId === 'EMP001' && a.date === today ? { ...a, checkOut: nowTime } : a));
-    toast({ title: 'Check-out Berhasil', description: `Absensi keluar pukul ${nowTime} berhasil dicatat.` });
+  const existing = attendance.find(
+    (a) => a.employeeId === currentUser.employeeId && a.date === today
+  );
+
+  if (!existing?.checkIn && !isTestAdmin) {
+    toast({
+      title: "Check-out ditolak",
+      description: "Anda belum melakukan check-in hari ini.",
+    });
+    return;
   }
+
+  if (existing?.checkOut && !isTestAdmin) {
+    toast({
+      title: "Check-out ditolak",
+      description: "Anda sudah melakukan check-out hari ini.",
+    });
+    return;
+  }
+
+  setAttendance((prev) =>
+    prev.map((a) =>
+      a.employeeId === currentUser.employeeId && a.date === today
+        ? { ...a, checkOut: nowTime }
+        : a
+    )
+  );
+
+  toast({
+    title: "Check-out Berhasil",
+    description: `Absensi keluar pukul ${nowTime} berhasil dicatat.`,
+  });
+}
 
   const filtered = useMemo(() => {
     return attendance.filter(a => {
+  if (a.isTestData) return false;
       const matchSearch = !search || a.employeeName.toLowerCase().includes(search.toLowerCase());
       const matchDate = !filterDate || a.date === filterDate;
       const matchStatus = !filterStatus || a.status === filterStatus;
@@ -242,7 +296,7 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleCheckIn}
-            disabled={checkedIn}
+            disabled={checkedIn && !isTestAdmin}
             className="flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#001E8A' }}
             data-testid="button-check-in"
@@ -252,7 +306,7 @@ async function getAddressFromCoordinates(lat: number, lng: number) {
           </button>
           <button
             onClick={handleCheckOut}
-            disabled={!checkedIn}
+            disabled={checkedIn && !isTestAdmin}
             className="flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#E30613' }}
             data-testid="button-check-out"
