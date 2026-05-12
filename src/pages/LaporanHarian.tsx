@@ -9,6 +9,7 @@ type Task = {
 };
 
 export default function LaporanHarian() {
+    const [activeTab, setActiveTab] = useState<'form' | 'todo' | 'riwayat'>('form');
     const today = new Date().toISOString().split("T")[0];
 
     const [nama, setNama] = useState("");
@@ -51,7 +52,7 @@ export default function LaporanHarian() {
             : 0;
 
     // cek selesai
-    const isSelesai = tasks.every((t) => t.status === "selesai");
+    const isSelesai = tasks.length > 0 && tasks.every((t) => t.status === "selesai");
 
     // simpan
     const handleSubmit = () => {
@@ -104,7 +105,29 @@ export default function LaporanHarian() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex gap-2 mt-4">
+  {[
+    { key: "form", label: "Form" },
+    { key: "todo", label: "To Do" },
+    { key: "riwayat", label: "Riwayat" },
+  ].map((tab) => (
+    <button
+      key={tab.key}
+      onClick={() => setActiveTab(tab.key as "form" | "todo" | "riwayat")}
+      className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+        activeTab === tab.key
+          ? "bg-[#E30613] text-white"
+          : "bg-white border border-gray-200 text-gray-600"
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
+
+            {activeTab === "form" && (
+  <>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
                     <p className="text-sm text-gray-500">Total Tugas</p>
                     <p className="text-3xl font-bold text-[#001E8A]">{tasks.length}</p>
@@ -248,6 +271,43 @@ export default function LaporanHarian() {
                     </div>
                 </div>
             </div>
+              </>
+)}
+{activeTab === "todo" && (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <h2 className="font-bold text-gray-900 mb-4">To Do List</h2>
+
+    {tasks.length === 0 ? (
+      <p className="text-sm text-gray-500">Belum ada tugas.</p>
+    ) : (
+      <div className="space-y-3">
+        {tasks.map((task, index) => (
+          <div key={index} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+            <p className="font-semibold text-gray-900">{task.nama || "Tanpa nama tugas"}</p>
+            <p className="text-sm text-gray-500">Deadline: {task.deadline || "-"}</p>
+            <p className="text-sm text-gray-500">Progress: {task.progress}%</p>
+            <p className="text-sm text-gray-500">Status: {task.status === "selesai" ? "Selesai" : "Belum selesai"}</p>
+            <p className="text-sm text-gray-500">Catatan: {task.catatan || "-"}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+{activeTab === "riwayat" && (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <h2 className="font-bold text-gray-900 mb-4">Riwayat Laporan</h2>
+
+    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+      <p className="font-semibold text-gray-900">{nama || "Belum ada nama"}</p>
+      <p className="text-sm text-gray-500">Tanggal: {tanggal}</p>
+      <p className="text-sm text-gray-500">Total Tugas: {tasks.length}</p>
+      <p className="text-sm text-gray-500">Total Progress: {totalProgress}%</p>
+      <p className="text-sm text-gray-500">Status: {isSelesai ? "Selesai" : "Belum selesai"}</p>
+    </div>
+  </div>
+)}
         </div>
     );
 }

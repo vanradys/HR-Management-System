@@ -70,6 +70,7 @@ export interface ReimbursementRequest {
   category: 'Transport' | 'Makan' | 'Kesehatan' | 'Peralatan' | 'Lainnya';
   amount: number;
   description: string;
+   proof?: string;
   receiptUrl?: string;
   status: 'Pending' | 'Disetujui' | 'Ditolak';
   paymentStatus: 'Belum Dibayar' | 'Sudah Dibayar';
