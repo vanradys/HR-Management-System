@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { MobileMenuButton } from './Sidebar';
 import { useLocation } from 'wouter';
 import type { AuthState } from '@/types/types';
+import { canAccessSettings } from '@/utils/permissions';
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -92,7 +93,15 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/pengaturan')}>
+            <DropdownMenuItem
+              onClick={() => {
+                if (canAccessSettings(auth.role)) {
+                  navigate('/pengaturan');
+                } else {
+                  alert('Pengaturan hanya bisa diakses oleh Admin.');
+                }
+              }}
+            >
               <Settings className="w-4 h-4 mr-2" />
               Pengaturan
             </DropdownMenuItem>

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'wouter';
 import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Timer,
-  Receipt, MapPin, Megaphone, Bell, DollarSign, Settings, X, Menu,
+  Receipt, MapPin, Megaphone, DollarSign, Settings, X, Menu,
   ChevronRight,
 } from 'lucide-react';
 import type { UserRole } from '@/types/types';
@@ -14,19 +14,31 @@ interface NavItem {
   allowedRoles: UserRole[];
 }
 
+const ALL_ROLES: UserRole[] = [
+  'Admin',
+  'Director',
+  'HRD',
+  'Finance',
+  'GA',
+  'Marketing',
+  'Engineering',
+  'Production',
+  'Logistic',
+  'Karyawan',
+];
+
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'] },
-  { label: 'Karyawan', path: '/karyawan', icon: Users, allowedRoles: ['Admin', 'HR', 'Manager'] },
-  { label: 'Absensi', path: '/absensi', icon: Clock, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Jadwal Shift', path: '/shift', icon: Calendar, allowedRoles: ['Admin', 'HR', 'Karyawan'] },
-  { label: 'Cuti & Izin', path: '/cuti-izin', icon: FileText, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Lembur', path: '/lembur', icon: Timer, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ['Admin', 'Finance', 'Karyawan'] },
-  { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Pengumuman', path: '/pengumuman', icon: Megaphone, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
-  { label: 'Notifikasi', path: '/notifikasi', icon: Bell, allowedRoles: ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'] },
-  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'HR', 'Finance'] },
+  { label: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ALL_ROLES },
+  { label: 'Karyawan', path: '/karyawan', icon: Users, allowedRoles: ['Admin', 'Director', 'HRD'] },
+  { label: 'Absensi', path: '/absensi', icon: Clock, allowedRoles: ALL_ROLES },
+  { label: 'Jadwal Shift', path: '/shift', icon: Calendar, allowedRoles: ALL_ROLES },
+  { label: 'Cuti & Izin', path: '/cuti-izin', icon: FileText, allowedRoles: ALL_ROLES },
+  { label: 'Lembur', path: '/lembur', icon: Timer, allowedRoles: ALL_ROLES },
+  { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ALL_ROLES },
+  { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ALL_ROLES },
+  { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ALL_ROLES },
+  { label: 'Pengumuman', path: '/pengumuman', icon: Megaphone, allowedRoles: ALL_ROLES },
+  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'Director', 'Finance', 'Karyawan'] },
   { label: 'Pengaturan', path: '/pengaturan', icon: Settings, allowedRoles: ['Admin'] },
 ];
 
@@ -101,15 +113,6 @@ export function Sidebar({ role, unreadCount, isOpen, onClose }: SidebarProps) {
                 >
                   <item.icon className={cn('w-4.5 h-4.5 flex-shrink-0', active ? 'text-white' : 'text-white/70 group-hover:text-white')} />
                   <span className="text-sm font-medium flex-1">{item.label}</span>
-                  {item.path === '/notifikasi' && unreadCount > 0 && (
-                    <span
-                      data-testid="badge-notif-count"
-                      className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full"
-                      style={{ backgroundColor: active ? 'rgba(255,255,255,0.3)' : '#E30613' }}
-                    >
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
                   {active && <ChevronRight className="w-3.5 h-3.5 text-white/60 ml-auto" />}
                 </div>
               </Link>

@@ -8,6 +8,8 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, generateId, getCurrentDatetime } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { canApproveRequest } from '@/utils/permissions';
 
 type FilterType = 'Semua' | 'Pending' | 'Disetujui' | 'Ditolak';
 

@@ -71,7 +71,7 @@ export interface ReimbursementRequest {
   category: 'Transport' | 'Makan' | 'Kesehatan' | 'Peralatan' | 'Lainnya';
   amount: number;
   description: string;
-   proof?: string;
+  proof?: string;
   receiptUrl?: string;
   status: 'Pending' | 'Disetujui' | 'Ditolak';
   paymentStatus: 'Belum Dibayar' | 'Sudah Dibayar';
@@ -140,7 +140,18 @@ export interface PayrollRecord {
   totalSalary: number;
 }
 
-export type UserRole = 'Admin' | 'HR' | 'Finance' | 'Manager' | 'Karyawan';
+export type UserRole =
+  | 'Admin'
+  | 'Director'
+  | 'HRD'
+  | 'Finance'
+  | 'GA'
+  | 'Supervisor'
+  | 'Marketing'
+  | 'Engineering'
+  | 'Production'
+  | 'Logistic'
+  | 'Karyawan';
 
 export interface AppUser {
   id: string;
