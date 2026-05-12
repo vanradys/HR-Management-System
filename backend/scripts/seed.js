@@ -48,7 +48,7 @@ const users = [
     employeeId: "PTAA-005",
     name: "Director PTAA",
     email: "director@adiyasa.com",
-    password: "DirectorPTAA",
+    password: "DirectorAdiyasa",
     role: "Director",
     department: "Management",
     position: "Director",
