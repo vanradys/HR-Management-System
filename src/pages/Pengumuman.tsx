@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Megaphone, Calendar } from 'lucide-react';
+import { Plus, X, Megaphone, Calendar, Search } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { Announcement } from '@/types/types';
 import { SEED_ANNOUNCEMENTS } from '@/data/seedData';
@@ -11,6 +11,7 @@ export default function Pengumuman() {
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useLocalStorage<Announcement[]>('hrptaa_announcements', SEED_ANNOUNCEMENTS);
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [form, setForm] = useState({
     title: '', content: '', priority: 'Normal' as 'Tinggi' | 'Normal' | 'Rendah',
     publishDate: new Date().toISOString().split('T')[0],
@@ -37,6 +38,18 @@ export default function Pengumuman() {
     Rendah: 'border-l-4 border-l-gray-300',
   };
 
+  const filteredAnnouncements = announcements.filter((ann) => {
+    const keyword = searchKeyword.toLowerCase();
+
+    return (
+      ann.title.toLowerCase().includes(keyword) ||
+      ann.content.toLowerCase().includes(keyword) ||
+      ann.priority.toLowerCase().includes(keyword) ||
+      ann.authorName.toLowerCase().includes(keyword) ||
+      formatDate(ann.publishDate).toLowerCase().includes(keyword)
+    );
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -53,12 +66,29 @@ export default function Pengumuman() {
           <Plus className="w-4 h-4" /> Buat Pengumuman
         </button>
       </div>
+      {/* Search bar */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            placeholder="Cari pengumuman berdasarkan judul, isi, prioritas, penulis, atau tanggal..."
+            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <p className="text-xs text-gray-500 mt-2">
+          Menampilkan {filteredAnnouncements.length} dari {announcements.length} pengumuman.
+        </p>
+      </div>
 
       {/* Announcement cards */}
       <div className="space-y-3">
-        {announcements.length === 0 ? (
+        {filteredAnnouncements.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-10 text-center text-gray-400">Belum ada pengumuman</div>
-        ) : announcements.map(ann => (
+        ) : filteredAnnouncements.map(ann => (
           <div
             key={ann.id}
             className={`bg-white rounded-xl border border-gray-100 shadow-sm p-5 ${priorityBg[ann.priority] || ''}`}
