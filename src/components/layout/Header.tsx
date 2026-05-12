@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Bell, ChevronDown, LogOut, Settings, } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,14 @@ import { MobileMenuButton } from './Sidebar';
 import { useLocation } from 'wouter';
 import type { AuthState } from '@/types/types';
 import { canAccessSettings } from '@/utils/permissions';
+import { useNotifications } from '@/hooks/useNotifications';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -38,6 +46,11 @@ interface HeaderProps {
 export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderProps) {
   const [location, navigate] = useLocation();
 
+  const {
+    notifications,
+    markRead,
+  } = useNotifications();
+
   const title = Object.entries(PAGE_TITLES).find(([path]) => {
     if (path === '/') return location === '/';
     return location.startsWith(path);
@@ -54,21 +67,80 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
 
       <div className="flex items-center gap-2">
         {/* Notification bell */}
-        <button
-          className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-          onClick={() => navigate('/notifikasi')}
-          data-testid="button-header-notif"
-        >
-          <Bell className="w-5 h-5 text-gray-600" />
-          {unreadCount > 0 && (
-            <span
-              className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 text-[10px] font-bold text-white rounded-full flex items-center justify-center"
-              style={{ backgroundColor: '#E30613' }}
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="relative p-2 rounded-full hover:bg-gray-100 transition">
+              <Bell className="w-5 h-5 text-gray-700" />
+
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            align="end"
+            className="w-[380px] p-0 rounded-2xl overflow-hidden shadow-2xl border border-gray-200"
+          >
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+              <h3 className="font-bold text-gray-900">
+                Notifications
+              </h3>
+
+              <button
+                onClick={() => navigate("/pengaturan")}
+                className="p-2 rounded-lg hover:bg-gray-100 transition"
+              >
+                <Settings className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+
+            {/* BODY */}
+            <ScrollArea className="h-[420px]">
+              <div className="divide-y">
+                {notifications.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-gray-500">
+                    Tidak ada notifikasi.
+                  </div>
+                ) : (
+                  notifications.map((notif) => (
+                    <button
+                      key={notif.id}
+                      onClick={() => {
+                        markRead(notif.id);
+                      }}
+                      className={`w-full text-left px-4 py-4 hover:bg-gray-50 transition ${!notif.isRead ? "bg-blue-50/60" : "bg-white"
+                        }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {!notif.isRead && (
+                          <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                        )}
+
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-gray-900">
+                            {notif.title}
+                          </p>
+
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            {notif.message}
+                          </p>
+
+                          <p className="text-xs text-gray-400 mt-2">
+                            {notif.timestamp}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </PopoverContent>
+        </Popover>
 
         {/* User dropdown */}
         <DropdownMenu>
