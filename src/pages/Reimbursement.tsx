@@ -152,7 +152,7 @@ export default function Reimbursement() {
           />
         </div>
 
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-2 text-sm text-gray-600">
           Menampilkan <span className="font-bold">{filteredReimbursements.length}</span> data dengan total{' '}
           <span className="font-bold text-red-600">{formatCurrency(totalFiltered)}</span>.
         </div>
