@@ -17,8 +17,12 @@ export default function Reimbursement() {
   const [reimbursements, setReimbursements] = useLocalStorage<ReimbursementRequest[]>('hrptaa_reimbursements', SEED_REIMBURSEMENTS);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
-    date: '', category: 'Transport' as typeof CATEGORIES[number], amount: '', description: '',
-  });
+  date: '',
+  category: 'Transport' as typeof CATEGORIES[number],
+  amount: '',
+  description: '',
+  proof: '',
+});
   const [filter, setFilter] = useState({
     month: '',
     year: '',
@@ -44,7 +48,7 @@ export default function Reimbursement() {
   const pendingCount = filteredReimbursements.filter(r => r.status === 'Pending').length;
 
   function handleSubmit() {
-    if (!form.date || !form.amount || !form.description) {
+    if (!form.date || !form.amount || !form.description || !form.proof) {
       toast({ title: 'Gagal', description: 'Harap isi semua field wajib.', variant: 'destructive' });
       return;
     }
@@ -52,14 +56,14 @@ export default function Reimbursement() {
       id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
       date: form.date, category: form.category,
       amount: parseInt(form.amount.replace(/\D/g, ''), 10) || 0,
-      description: form.description, status: 'Pending',
+      description: form.description, proof: form.proof, status: 'Pending',
       paymentStatus: 'Belum Dibayar', submittedAt: getCurrentDatetime(),
     };
     setReimbursements(prev => [newReq, ...prev]);
     addNotification('reimbursement_update', 'Reimbursement Dikirim', `Pengajuan reimbursement ${formatCurrency(newReq.amount)} sedang diproses.`);
     toast({ title: 'Berhasil', description: 'Pengajuan reimbursement berhasil dikirim.' });
     setModalOpen(false);
-    setForm({ date: '', category: 'Transport', amount: '', description: '' });
+    setForm({ date: '', category: 'Transport', amount: '', description: '', proof: '' });
   }
 
   function handleApprove(id: string) {

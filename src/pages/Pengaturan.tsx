@@ -10,21 +10,33 @@ import { useToast } from '@/hooks/use-toast';
 type MenuItem = 'Dashboard' | 'Karyawan' | 'Absensi' | 'Shift' | 'Cuti & Izin' | 'Lembur' | 'Reimbursement' | 'Laporan' | 'Pengumuman' | 'Notifikasi' | 'Payroll' | 'Pengaturan';
 
 const MENU_ITEMS: MenuItem[] = ['Dashboard', 'Karyawan', 'Absensi', 'Shift', 'Cuti & Izin', 'Lembur', 'Reimbursement', 'Laporan', 'Pengumuman', 'Notifikasi', 'Payroll', 'Pengaturan'];
-const ROLES: UserRole[] = ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'];
+const ROLES = [
+  'Director',
+  'HRD',
+  'Finance',
+  'GA',
+  'Marketing',
+  'Engineering',
+  'Production',
+  'Logistic',
+  'Karyawan',
+] as const;
 
-const PERMISSIONS: Record<MenuItem, UserRole[]> = {
-  Dashboard: ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'],
-  Karyawan: ['Admin', 'HR', 'Manager'],
-  Absensi: ['Admin', 'HR', 'Manager', 'Karyawan'],
-  Shift: ['Admin', 'HR', 'Karyawan'],
-  'Cuti & Izin': ['Admin', 'HR', 'Manager', 'Karyawan'],
-  Lembur: ['Admin', 'HR', 'Manager', 'Karyawan'],
-  Reimbursement: ['Admin', 'Finance', 'Karyawan'],
-  Laporan: ['Admin', 'HR', 'Manager', 'Karyawan'],
-  Pengumuman: ['Admin', 'HR', 'Manager', 'Karyawan'],
-  Notifikasi: ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'],
-  Payroll: ['Admin', 'HR', 'Finance'],
-  Pengaturan: ['Admin'],
+type PermissionRole = typeof ROLES[number];
+
+const PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
+  Dashboard: ['Director', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Karyawan: ['Director', 'HRD'],
+  Absensi: ['Director', 'HRD', 'GA', 'Karyawan'],
+  Shift: ['Director', 'HRD', 'Production', 'Logistic', 'Karyawan'],
+  'Cuti & Izin': ['Director', 'HRD', 'GA', 'Karyawan'],
+  Lembur: ['Director', 'HRD', 'Finance', 'Engineering', 'Production', 'Logistic'],
+  Reimbursement: ['Director', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Laporan: ['Director', 'HRD', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Pengumuman: ['Director', 'HRD', 'GA'],
+  Notifikasi: ['Director', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Payroll: ['Director', 'HRD', 'Finance'],
+  Pengaturan: ['Director', 'HRD'],
 };
 
 export default function Pengaturan() {
@@ -56,7 +68,9 @@ export default function Pengaturan() {
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Menu</th>
                 {ROLES.map(role => (
                   <th key={role} className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide">
-                    <StatusBadge status={role} />
+                    <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
+                      {role}
+                    </span>
                   </th>
                 ))}
               </tr>
@@ -131,11 +145,10 @@ export default function Pengaturan() {
                   <td className="px-5 py-3">
                     <button
                       onClick={() => handleStatusChange(user.id)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-                        user.status === 'Aktif'
-                          ? 'border-red-200 text-red-700 hover:bg-red-50'
-                          : 'border-green-200 text-green-700 hover:bg-green-50'
-                      }`}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${user.status === 'Aktif'
+                        ? 'border-red-200 text-red-700 hover:bg-red-50'
+                        : 'border-green-200 text-green-700 hover:bg-green-50'
+                        }`}
                       data-testid={`button-toggle-status-${user.id}`}
                     >
                       {user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}

@@ -51,6 +51,7 @@ const removeTask = (index: number) => {
 };
 
     // update task
+    
     const updateTask = <K extends keyof Task>(
         index: number,
         field: K,
@@ -122,17 +123,15 @@ const removeTask = (index: number) => {
 };
 
     // load data
+
     useEffect(() => {
     const saved = localStorage.getItem("laporan-harian-list");
 
     if (saved) {
         const parsed: DailyReport[] = JSON.parse(saved);
-
         setReports(parsed);
 
-        const todayReport = parsed.find(
-            (r) => r.tanggal === today
-        );
+        const todayReport = parsed.find((r) => r.tanggal === today);
 
         if (todayReport) {
             setNama(todayReport.nama);
@@ -214,6 +213,7 @@ const removeTask = (index: number) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                
                                 Nama
                             </label>
                             <input
@@ -254,6 +254,7 @@ const removeTask = (index: number) => {
                                     className="border border-gray-100 rounded-2xl p-4 bg-gray-50"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                                        
                                         <input
                                             className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
                                             placeholder="Nama pekerjaan"
@@ -294,7 +295,7 @@ const removeTask = (index: number) => {
 
                                     <input
                                         className="w-full mt-3 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
-                                        placeholder="Catatan tugas"
+                                        placeholder="Contoh: menunggu approval, revisi customer, follow up vendor, dll."
                                         value={t.catatan}
                                         onChange={(e) => updateTask(i, "catatan", e.target.value)}
                                     />
@@ -342,111 +343,45 @@ const removeTask = (index: number) => {
               </>
 )}
 {activeTab === "todo" && (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-    <h2 className="font-bold text-gray-900 mb-4">To Do List</h2>
-
-    {tasks.length === 0 ? (
-      <p className="text-sm text-gray-500">Belum ada tugas.</p>
-    ) : (
-      <div className="space-y-3">
-        {tasks.map((task, index) => (
-          <div key={index} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-            <p className="font-semibold text-gray-900">{task.nama || "Tanpa nama tugas"}</p>
-            <p className="text-sm text-gray-500">Deadline: {task.deadline || "-"}</p>
-            <p className="text-sm text-gray-500">Progress: {task.progress}%</p>
-            <p className="text-sm text-gray-500">Status: {task.status === "selesai" ? "Selesai" : "Belum selesai"}</p>
-            <p className="text-sm text-gray-500">Catatan: {task.catatan || "-"}</p>
-          </div>
-        ))}
+  <div className="bg-white rounded-2xl border p-5 space-y-4">
+    <div className="flex justify-between items-center">
+      <div>
+        <h2 className="font-bold text-lg">To Do List Harian</h2>
+        <p className="text-sm text-gray-500">Daftar tugas hari ini dan reminder deadline.</p>
       </div>
-    )}
-  </div>
-)}
 
-{activeTab === "riwayat" && (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-    <h2 className="font-bold text-gray-900 mb-4">Riwayat Laporan</h2>
-
-    <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
-      <p className="font-semibold text-gray-900">{nama || "Belum ada nama"}</p>
-      <p className="text-sm text-gray-500">Tanggal: {tanggal}</p>
-      <p className="text-sm text-gray-500">Total Tugas: {tasks.length}</p>
-      <p className="text-sm text-gray-500">Total Progress: {totalProgress}%</p>
-      <p className="text-sm text-gray-500">Status: {isSelesai ? "Selesai" : "Belum selesai"}</p>
+      <button onClick={addTask} className="bg-[#E30613] text-white px-4 py-2 rounded-xl font-bold">
+        + Tambah Item
+      </button>
     </div>
-  </div>
-)}
-{activeTab === "todo" && (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex justify-between items-center mb-4">
-            <div>
-                <h2 className="font-bold text-gray-900">
-                    To Do List Harian
-                </h2>
 
-                <p className="text-sm text-gray-500">
-                    Daftar tugas hari ini yang masih berjalan.
-                </p>
-            </div>
+    {tasks.map((t, i) => {
+      const telat = t.deadline && t.deadline < today && t.status !== "selesai";
 
-            <button
-                onClick={addTask}
-                className="px-4 py-2 rounded-xl bg-[#E30613] text-white text-sm font-semibold"
-            >
-                + Tambah Item
-            </button>
+      return (
+        <div key={i} className={`rounded-xl border p-4 space-y-3 ${telat ? "border-red-400 bg-red-50" : "bg-gray-50"}`}>
+          {telat && (
+            <p className="text-red-600 font-bold text-sm">
+              ⚠️ Tugas ini sudah lewat deadline dan belum selesai
+            </p>
+          )}
+
+          <input placeholder="Nama pekerjaan" value={t.nama} onChange={e => updateTask(i, "nama", e.target.value)} className="w-full border rounded-lg px-3 py-2" />
+
+          <input type="date" value={t.deadline} onChange={e => updateTask(i, "deadline", e.target.value)} className="w-full border rounded-lg px-3 py-2" />
+
+          <input type="number" placeholder="Progress %" value={t.progress} onChange={e => updateTask(i, "progress", Number(e.target.value))} className="w-full border rounded-lg px-3 py-2" />
+
+          <select value={t.status} onChange={e => updateTask(i, "status", e.target.value as Task["status"])} className="w-full border rounded-lg px-3 py-2">
+            <option value="belum">Belum selesai</option>
+            <option value="selesai">Selesai</option>
+          </select>
+
+          <textarea placeholder="Catatan tugas" value={t.catatan} onChange={e => updateTask(i, "catatan", e.target.value)} className="w-full border rounded-lg px-3 py-2" />
         </div>
-
-        {tasks.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">
-                Belum ada tugas.
-            </div>
-        ) : (
-            <div className="space-y-3">
-                {tasks.map((task, index) => (
-                    <div
-                        key={index}
-                        className="border border-gray-100 rounded-xl p-4 bg-gray-50"
-                    >
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-semibold text-gray-900">
-                                    {task.nama || "Tanpa nama tugas"}
-                                </p>
-
-                                <p className="text-sm text-gray-500">
-                                    Deadline: {task.deadline || "-"}
-                                </p>
-
-                                <p className="text-sm text-gray-500">
-                                    Progress: {task.progress}%
-                                </p>
-
-                                <p className="text-sm text-gray-500">
-                                    Status:
-                                    {task.status === "selesai"
-                                        ? " Selesai"
-                                        : " Belum selesai"}
-                                </p>
-
-                                <p className="text-sm text-gray-500">
-                                    Catatan:
-                                    {task.catatan || "-"}
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={() => removeTask(index)}
-                                className="text-red-500 text-sm font-semibold"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-    </div>
+      );
+    })}
+  </div>
 )}
 
 {activeTab === "riwayat" && (
@@ -465,7 +400,15 @@ const removeTask = (index: number) => {
                     const canEdit =
                         report.tanggal === today &&
                         report.status === "draft";
+                    useEffect(() => {
+  const now = new Date().toISOString().split("T")[0];
 
+  tasks.forEach((t) => {
+    if (t.deadline && t.deadline < now && t.status !== "selesai") {
+      alert(`Tugas "${t.nama || 'Tanpa nama'}" sudah lewat deadline!`);
+    }
+  });
+}, [tasks]);
                     return (
                         <div
                             key={index}
