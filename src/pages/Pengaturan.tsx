@@ -53,6 +53,18 @@ export default function Pengaturan() {
     toast({ title: 'Berhasil', description: 'Status pengguna berhasil diperbarui.' });
   }
 
+  const roleColor: Record<string, string> = {
+    Director: "bg-red-100 text-red-700",
+    HRD: "bg-blue-100 text-blue-700",
+    Finance: "bg-green-100 text-green-700",
+    GA: "bg-yellow-100 text-yellow-700",
+    Marketing: "bg-pink-100 text-pink-700",
+    Engineering: "bg-purple-100 text-purple-700",
+    Production: "bg-orange-100 text-orange-700",
+    Logistic: "bg-cyan-100 text-cyan-700",
+    Karyawan: "bg-gray-100 text-gray-700",
+  };
+
   return (
     <div className="space-y-6">
       {/* Permission matrix */}
@@ -68,7 +80,7 @@ export default function Pengaturan() {
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Menu</th>
                 {ROLES.map(role => (
                   <th key={role} className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide">
-                    <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${roleColor[role]}`}>
                       {role}
                     </span>
                   </th>
@@ -141,7 +153,9 @@ export default function Pengaturan() {
                       {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </td>
-                  <td className="px-5 py-3"><StatusBadge status={user.status} /></td>
+                  <td className="px-5 py-3"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${roleColor[user.role]}`}>
+                    {user.role}
+                  </span></td>
                   <td className="px-5 py-3">
                     <button
                       onClick={() => handleStatusChange(user.id)}
@@ -160,6 +174,6 @@ export default function Pengaturan() {
           </table>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
