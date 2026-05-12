@@ -19,6 +19,19 @@ export default function Laporan() {
   const [commentText, setCommentText] = useState('');
   const [form, setForm] = useState({ title: '', description: '', location: '' });
 
+  function handleTagEmployee(employeeName: string) {
+    const mention = `@${employeeName}`;
+
+    if (form.description.includes(mention)) return;
+
+    setForm((prev) => ({
+      ...prev,
+      description: prev.description
+        ? `${prev.description} ${mention}`
+        : mention,
+    }));
+  }
+
   function handleSubmitReport() {
     if (!form.title || !form.description || !form.location) {
       toast({ title: 'Gagal', description: 'Harap isi semua field wajib.', variant: 'destructive' });
@@ -40,7 +53,7 @@ export default function Laporan() {
       id: generateId(),
       type: 'report',
       title: 'Anda ditandai dalam laporan',
-      message: `Anda ditandai dalam laporan "${form.title}"`,
+      message: `${employee.name} ditandai dalam laporan "${form.title}"`,
       targetUser: employee.name,
       timestamp: getCurrentDatetime(),
       read: false,
@@ -254,6 +267,24 @@ export default function Laporan() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi Pekerjaan *</label>
                 <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} placeholder="Jelaskan detail pekerjaan yang dilakukan..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none" data-testid="input-laporan-desc" />
+              </div>
+              <div className="mt-2">
+                <p className="text-xs font-semibold text-gray-500 mb-2">
+                  Tag karyawan di deskripsi pekerjaan:
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {SEED_EMPLOYEES.map((employee) => (
+                    <button
+                      key={employee.id}
+                      type="button"
+                      onClick={() => handleTagEmployee(employee.name)}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-full border border-blue-100 text-[#001E8A] bg-blue-50 hover:bg-blue-100"
+                    >
+                      @{employee.name}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-500">Upload foto/video (segera tersedia)</p>
