@@ -306,6 +306,29 @@ export default function Reimbursement() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
                   data-testid="input-reimb-amount"
                 />
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Upload Bukti Struk/Nota *
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(f => ({ ...f, proof: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }}
+    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+  />
+</div>
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan *</label>
