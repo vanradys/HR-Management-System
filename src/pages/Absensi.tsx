@@ -1,5 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, Clock, CheckCircle } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Clock,
+  CheckCircle,
+  MapPin,
+  Camera
+} from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { Attendance } from '@/types/types';
 import { SEED_ATTENDANCE } from '@/data/seedData';
@@ -24,16 +31,37 @@ export default function Absensi() {
     const myRecord = attendance.find(a => a.employeeId === 'EMP001' && a.date === today);
     return !!myRecord?.checkIn;
   });
+  const [currentLocation, setCurrentLocation] = useState('');
+const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      setCurrentLocation(`${lat}, ${lng}`);
+    },
+    (error) => {
+      console.log(error);
+
+      toast({
+        title: 'GPS gagal',
+        description: 'Lokasi tidak bisa diakses.',
+      });
+    }
+  );
+}
 
   function handleCheckIn() {
-    const existing = attendance.find(a => a.employeeId === 'EMP001' && a.date === today);
+  getLocation();
+  const existing = attendance.find(a => a.employeeId === 'EMP001' && a.date === today);
     if (existing) {
       setAttendance(prev => prev.map(a => a.id === existing.id ? { ...a, checkIn: nowTime, status: nowTime > '08:30' ? 'Terlambat' : 'Hadir' } : a));
     } else {
       const newRec: Attendance = {
         id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
         date: today, checkIn: nowTime, checkOut: '', status: nowTime > '08:30' ? 'Terlambat' : 'Hadir',
-        location: 'Kantor Pusat, Jakarta',
+        location: currentLocation || 'Lokasi tidak terdeteksi',
       };
       setAttendance(prev => [newRec, ...prev]);
     }
@@ -73,6 +101,7 @@ export default function Absensi() {
       {/* Check-in/out card */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Absensi Hari Ini — {new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</h3>
+        
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleCheckIn}
@@ -95,6 +124,30 @@ export default function Absensi() {
             Check-out Sekarang
           </button>
         </div>
+        <div className="mt-5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+  <div className="flex items-start gap-3">
+    <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
+
+    <div>
+      <p className="text-sm font-semibold text-gray-800">
+        GPS dan Geofencing
+      </p>
+
+      <p className="text-xs text-gray-500 mt-1">
+        Sistem otomatis mencatat lokasi absensi secara real-time.
+      </p>
+
+      <p className="text-xs text-gray-500 mt-2">
+        Lokasi sekarang:
+      </p>
+
+      <p className="text-xs font-mono text-gray-700 mt-1">
+        {currentLocation || 'Belum terdeteksi'}
+      </p>
+    </div>
+  </div>
+</div>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-gray-100">
           {[
             { label: 'Hadir', value: todayStats.hadir, color: 'text-green-600' },
