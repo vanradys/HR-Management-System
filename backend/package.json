@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "prisma generate && prisma migrate deploy",
+    "seed": "node scripts/seed.js"
   },
   "keywords": [],
   "author": "",
