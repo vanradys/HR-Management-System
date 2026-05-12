@@ -144,8 +144,8 @@ export interface PayrollRecord {
 export type UserRole =
   | 'Admin'
   | 'Director'
-  | 'HRD'
-  | 'Finance'
+  | 'Accounting'
+  | 'Purchasing'
   | 'GA'
   | 'Supervisor'
   | 'Marketing'

@@ -172,7 +172,7 @@ export default function Login({ onLogin }: LoginProps) {
                 Gunakan email terdaftar. Hubungi HR jika mengalami kendala akses.
               </p>
               <p className="text-xs text-blue-600 text-center mt-2 font-medium">
-                Coba: siti@company.com (HR) atau budi@company.com (Finance)
+                Coba: siti@company.com (HR) atau budi@company.com (Purchasing)
               </p>
             </div>
           </div>

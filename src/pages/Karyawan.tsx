@@ -8,7 +8,7 @@ import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, generateId } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
 
-const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operasional', 'Marketing', 'Legal'];
+const DEPARTMENTS = ['IT', 'Accounting', 'Purchasing', 'Operasional', 'Marketing', 'Legal'];
 
 const EMPTY_FORM: Omit<Employee, 'id'> = {
   name: '', nik: '', department: 'IT', position: '', employmentStatus: 'Tetap',

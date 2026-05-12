@@ -4,12 +4,12 @@ import { generateId, toDateString, getWeekDates } from '../utils/helpers';
 export const SEED_EMPLOYEES: Employee[] = [
   { id: 'EMP001', name: 'Andi Kusuma', nik: 'NIK001', department: 'IT', position: 'Web Developer', employmentStatus: 'Tetap', phone: '081234567890', email: 'andi@ptaa.co.id', address: 'Jl. Sudirman No. 1, Jakarta', joinDate: '2021-03-15', status: 'Aktif' },
   { id: 'EMP002', name: 'Siti Rahayu', nik: 'NIK002', department: 'HR', position: 'HR Manager', employmentStatus: 'Tetap', phone: '082345678901', email: 'siti@ptaa.co.id', address: 'Jl. Gatot Subroto No. 5, Jakarta', joinDate: '2019-07-01', status: 'Aktif' },
-  { id: 'EMP003', name: 'Budi Santoso', nik: 'NIK003', department: 'Finance', position: 'Finance Staff', employmentStatus: 'Tetap', phone: '083456789012', email: 'budi@ptaa.co.id', address: 'Jl. Thamrin No. 12, Jakarta', joinDate: '2020-01-10', status: 'Aktif' },
+  { id: 'EMP003', name: 'Budi Santoso', nik: 'NIK003', department: 'Purchasing', position: 'Purchasing Staff', employmentStatus: 'Tetap', phone: '083456789012', email: 'budi@ptaa.co.id', address: 'Jl. Thamrin No. 12, Jakarta', joinDate: '2020-01-10', status: 'Aktif' },
   { id: 'EMP004', name: 'Dewi Lestari', nik: 'NIK004', department: 'Operasional', position: 'Supervisor', employmentStatus: 'Tetap', phone: '084567890123', email: 'dewi@ptaa.co.id', address: 'Jl. Rasuna Said No. 8, Jakarta', joinDate: '2018-11-20', status: 'Aktif' },
   { id: 'EMP005', name: 'Rizki Fauzan', nik: 'NIK005', department: 'IT', position: 'Backend Developer', employmentStatus: 'Kontrak', phone: '085678901234', email: 'rizki@ptaa.co.id', address: 'Jl. Kebon Jeruk No. 3, Jakarta', joinDate: '2022-06-01', status: 'Aktif' },
   { id: 'EMP006', name: 'Nurul Hidayah', nik: 'NIK006', department: 'HR', position: 'HR Staff', employmentStatus: 'Kontrak', phone: '086789012345', email: 'nurul@ptaa.co.id', address: 'Jl. Cempaka Putih No. 7, Jakarta', joinDate: '2022-09-01', status: 'Nonaktif' },
   { id: 'EMP007', name: 'Agus Wirawan', nik: 'NIK007', department: 'Operasional', position: 'Staff Lapangan', employmentStatus: 'Tetap', phone: '087890123456', email: 'agus@ptaa.co.id', address: 'Jl. Mangga Dua No. 2, Jakarta', joinDate: '2020-05-12', status: 'Aktif' },
-  { id: 'EMP008', name: 'Putri Amaliya', nik: 'NIK008', department: 'Finance', position: 'Finance Manager', employmentStatus: 'Tetap', phone: '088901234567', email: 'putri@ptaa.co.id', address: 'Jl. Kuningan No. 14, Jakarta', joinDate: '2017-08-25', status: 'Aktif' },
+  { id: 'EMP008', name: 'Putri Amaliya', nik: 'NIK008', department: 'Purchasing', position: 'Purchasing Manager', employmentStatus: 'Tetap', phone: '088901234567', email: 'putri@ptaa.co.id', address: 'Jl. Kuningan No. 14, Jakarta', joinDate: '2017-08-25', status: 'Aktif' },
   { id: 'EMP009', name: 'Hendra Gunawan', nik: 'NIK009', department: 'Operasional', position: 'Project Manager', employmentStatus: 'Tetap', phone: '089012345678', email: 'hendra@ptaa.co.id', address: 'Jl. Senayan No. 9, Jakarta', joinDate: '2016-04-03', status: 'Aktif' },
   { id: 'EMP010', name: 'Maya Sari', nik: 'NIK010', department: 'IT', position: 'UI Designer', employmentStatus: 'Kontrak', phone: '081122334455', email: 'maya@ptaa.co.id', address: 'Jl. Kemang No. 6, Jaksel', joinDate: '2023-02-01', status: 'Aktif' },
 ];
@@ -191,11 +191,11 @@ export const SEED_PAYROLL: PayrollRecord[] = SEED_EMPLOYEES.filter(e => e.status
 
 export const SEED_USERS: AppUser[] = [
   { id: 'EMP001', name: 'Andi Kusuma', email: 'andi@company.com', role: 'Marketing', status: 'Aktif' },
-  { id: 'EMP002', name: 'Siti Rahayu', email: 'siti@company.com', role: 'Finance', status: 'Aktif' },
-  { id: 'EMP003', name: 'Budi Santoso', email: 'budi@company.com', role: 'Finance', status: 'Aktif' },
+  { id: 'EMP002', name: 'Siti Rahayu', email: 'siti@company.com', role: 'Purchasing', status: 'Aktif' },
+  { id: 'EMP003', name: 'Budi Santoso', email: 'budi@company.com', role: 'Purchasing', status: 'Aktif' },
   { id: 'EMP004', name: 'Dewi Lestari', email: 'dewi@company.com', role: 'Supervisor', status: 'Aktif' },
   { id: 'EMP005', name: 'Rizki Fauzan', email: 'rizki@company.com', role: 'GA', status: 'Aktif' },
   { id: 'EMP006', name: 'Nurul Hidayah', email: 'nurul@company.com', role: 'Engineering', status: 'Nonaktif' },
-  { id: 'EMP007', name: 'Agus Wirawan', email: 'agus@company.com', role: 'Finance', status: 'Aktif' },
+  { id: 'EMP007', name: 'Agus Wirawan', email: 'agus@company.com', role: 'Purchasing', status: 'Aktif' },
   { id: 'EMP008', name: 'Putri Amaliya', email: 'putri@company.com', role: 'Logistic', status: 'Aktif' },
 ];

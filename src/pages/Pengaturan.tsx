@@ -13,9 +13,9 @@ const MENU_ITEMS: MenuItem[] = ['Dashboard', 'Absensi', 'Shift', 'Cuti & Izin', 
 const ROLES = [
   'Director',
   'Admin',
-  'HRD',
+  'Accounting',
   'Supervisor',
-  'Finance',
+  'Purchasing',
   'GA',
   'Marketing',
   'Engineering',
@@ -26,18 +26,18 @@ const ROLES = [
 type PermissionRole = typeof ROLES[number];
 
 const DEFAULT_PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
-  Dashboard: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
-  Karyawan: ['Director', 'Admin', 'HRD'],
-  Absensi: ['Director', 'Admin', 'HRD', 'GA'],
-  Shift: ['Director', 'Admin', 'HRD', 'Production', 'Logistic'],
-  'Cuti & Izin': ['Director', 'Admin', 'HRD', 'GA'],
-  Lembur: ['Director', 'Admin', 'HRD', 'Finance', 'Engineering', 'Production', 'Logistic'],
-  Reimbursement: ['Director', 'Admin', 'Supervisor', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
-  Laporan: ['Director', 'Admin', 'HRD', 'GA', 'Finance', 'Marketing', 'Engineering', 'Production', 'Logistic'],
-  Pengumuman: ['Director', 'Admin', 'HRD', 'GA', 'Finance', 'Marketing', 'Engineering', 'Production', 'Logistic'],
-  Notifikasi: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
-  Payroll: ['Director', 'Admin', 'HRD', 'Finance'],
-  Pengaturan: ['Director', 'Admin', 'HRD'],
+  Dashboard: ['Director', 'Admin', 'Accounting', 'Purchasing', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Karyawan: ['Director', 'Admin', 'Accounting'],
+  Absensi: ['Director', 'Admin', 'Accounting', 'GA'],
+  Shift: ['Director', 'Admin', 'Accounting', 'Production', 'Logistic'],
+  'Cuti & Izin': ['Director', 'Admin', 'Accounting', 'GA'],
+  Lembur: ['Director', 'Admin', 'Accounting', 'Purchasing', 'Engineering', 'Production', 'Logistic'],
+  Reimbursement: ['Director', 'Admin', 'Supervisor', 'Purchasing', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Laporan: ['Director', 'Admin', 'Accounting', 'GA', 'Purchasing', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Pengumuman: ['Director', 'Admin', 'Accounting', 'GA', 'Purchasing', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Notifikasi: ['Director', 'Admin', 'Accounting', 'Purchasing', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Payroll: ['Director', 'Admin', 'Accounting', 'Purchasing'],
+  Pengaturan: ['Director', 'Admin', 'Accounting'],
 };
 
 export default function Pengaturan() {
@@ -87,8 +87,8 @@ export default function Pengaturan() {
 
   const roleColor: Record<string, string> = {
     Director: "bg-red-100 text-red-700",
-    HRD: "bg-blue-100 text-blue-700",
-    Finance: "bg-green-100 text-green-700",
+    Accounting: "bg-blue-100 text-blue-700",
+    Purchasing: "bg-green-100 text-green-700",
     GA: "bg-yellow-100 text-yellow-700",
     Marketing: "bg-pink-100 text-pink-700",
     Engineering: "bg-purple-100 text-purple-700",

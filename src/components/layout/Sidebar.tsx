@@ -17,8 +17,8 @@ interface NavItem {
 const ALL_ROLES: UserRole[] = [
   'Admin',
   'Director',
-  'HRD',
-  'Finance',
+  'Accounting',
+  'Purchasing',
   'GA',
   'Marketing',
   'Engineering',
@@ -29,7 +29,7 @@ const ALL_ROLES: UserRole[] = [
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ALL_ROLES },
-  { label: 'Karyawan', path: '/karyawan', icon: Users, allowedRoles: ['Admin', 'Director', 'HRD'] },
+  { label: 'Karyawan', path: '/karyawan', icon: Users, allowedRoles: ['Admin', 'Director', 'Accounting'] },
   { label: 'Absensi', path: '/absensi', icon: Clock, allowedRoles: ALL_ROLES },
   { label: 'Jadwal Shift', path: '/shift', icon: Calendar, allowedRoles: ALL_ROLES },
   { label: 'Cuti & Izin', path: '/cuti-izin', icon: FileText, allowedRoles: ALL_ROLES },
@@ -38,7 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ALL_ROLES },
   { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ALL_ROLES },
   { label: 'Chat', path: '/chat', icon: MessageCircle, allowedRoles: ALL_ROLES },
-  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'Director', 'Finance', 'Karyawan'] },
+  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'Director', 'Purchasing', 'Karyawan'] },
   { label: 'Pengaturan', path: '/pengaturan', icon: Settings, allowedRoles: ['Admin'] },
 ];
 

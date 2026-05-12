@@ -2,8 +2,8 @@
 export type Role =
   | "Admin"
   | "Director"
-  | "HRD"
-  | "Finance"
+  | "Accounting"
+  | "Purchasing"
   | "GA"
   | "Marketing"
   | "Engineering"
@@ -17,7 +17,7 @@ export const isAdminOrDirector = (role: string) =>
 
 // Cek apakah role boleh edit jadwal shift.
 export const canManageShift = (role: string) =>
-  ["Admin", "Director", "HRD"].includes(role);
+  ["Admin", "Director", "Accounting"].includes(role);
 
 // Cek apakah role boleh approve cuti/lembur.
 export const canApproveRequest = (role: string) =>
@@ -25,15 +25,15 @@ export const canApproveRequest = (role: string) =>
 
 // Cek apakah role boleh melihat semua reimbursement.
 export const canViewAllReimbursements = (role: string) =>
-  ["Admin", "Director", "Finance"].includes(role);
+  ["Admin", "Director", "Purchasing"].includes(role);
 
 // Cek apakah role boleh mengelola pengumuman.
 export const canManageAnnouncement = (role: string) =>
-  ["Admin", "HRD"].includes(role);
+  ["Admin", "Accounting"].includes(role);
 
 // Cek apakah role boleh melihat rekap payroll semua karyawan.
 export const canViewPayrollSummary = (role: string) =>
-  ["Admin", "Director", "Finance"].includes(role);
+  ["Admin", "Director", "Purchasing"].includes(role);
 
 // Cek apakah role boleh akses pengaturan.
 export const canAccessSettings = (role: string) =>

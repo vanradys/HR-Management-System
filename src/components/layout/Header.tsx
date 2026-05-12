@@ -89,13 +89,6 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
               <h3 className="font-bold text-gray-900">
                 Notifications
               </h3>
-
-              <button
-                onClick={() => navigate("/pengaturan")}
-                className="p-2 rounded-lg hover:bg-gray-100 transition"
-              >
-                <Settings className="w-4 h-4 text-gray-600" />
-              </button>
             </div>
 
             {/* BODY */}
