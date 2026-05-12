@@ -19,9 +19,29 @@ export default function Reimbursement() {
   const [form, setForm] = useState({
     date: '', category: 'Transport' as typeof CATEGORIES[number], amount: '', description: '',
   });
+  const [filter, setFilter] = useState({
+    month: '',
+    year: '',
+    startDate: '',
+    endDate: '',
+  });
 
-  const totalApproved = reimbursements.filter(r => r.status === 'Disetujui').reduce((s, r) => s + r.amount, 0);
-  const totalPaid = reimbursements.filter(r => r.paymentStatus === 'Sudah Dibayar').reduce((s, r) => s + r.amount, 0);
+  const filteredReimbursements = reimbursements.filter(r => {
+    const d = new Date(r.date);
+
+    return (
+      (!filter.month || d.getMonth() + 1 === Number(filter.month)) &&
+      (!filter.year || d.getFullYear() === Number(filter.year)) &&
+      (!filter.startDate || r.date >= filter.startDate) &&
+      (!filter.endDate || r.date <= filter.endDate)
+    );
+  });
+
+  const totalApproved = filteredReimbursements.filter(r => r.status === 'Disetujui').reduce((s, r) => s + r.amount, 0);
+  const totalPaid = filteredReimbursements.filter(r => r.paymentStatus === 'Sudah Dibayar').reduce((s, r) => s + r.amount, 0);
+  const totalFiltered = filteredReimbursements.reduce((s, r) => s + r.amount, 0);
+
+  const pendingCount = filteredReimbursements.filter(r => r.status === 'Pending').length;
 
   function handleSubmit() {
     if (!form.date || !form.amount || !form.description) {
@@ -67,12 +87,129 @@ export default function Reimbursement() {
         </button>
       </div>
 
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">Rekap Reimbursement</h3>
+            <p className="text-xs text-gray-500">
+              Filter berdasarkan bulan, tahun, atau rentang tanggal.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setFilter({ month: '', year: '', startDate: '', endDate: '' })}
+            className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            Reset Filter
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <select
+            value={filter.month}
+            onChange={(e) => setFilter(f => ({ ...f, month: e.target.value }))}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+          >
+            <option value="">Semua Bulan</option>
+            <option value="1">Januari</option>
+            <option value="2">Februari</option>
+            <option value="3">Maret</option>
+            <option value="4">April</option>
+            <option value="5">Mei</option>
+            <option value="6">Juni</option>
+            <option value="7">Juli</option>
+            <option value="8">Agustus</option>
+            <option value="9">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+          </select>
+
+          <input
+            type="number"
+            placeholder="Tahun, contoh: 2026"
+            value={filter.year}
+            onChange={(e) => setFilter(f => ({ ...f, year: e.target.value }))}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+          />
+
+          <input
+            type="date"
+            value={filter.startDate}
+            onChange={(e) => setFilter(f => ({ ...f, startDate: e.target.value }))}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+          />
+
+          <input
+            type="date"
+            value={filter.endDate}
+            onChange={(e) => setFilter(f => ({ ...f, endDate: e.target.value }))}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+          />
+        </div>
+
+        <div className="mt-4 text-sm text-gray-600">
+          Menampilkan <span className="font-bold">{filteredReimbursements.length}</span> data dengan total{' '}
+          <span className="font-bold text-red-600">{formatCurrency(totalFiltered)}</span>.
+        </div>
+      </div>
+
+
+      <div className="bg-white border rounded-xl p-4 mb-4">
+        <p className="font-bold mb-2">Filter Reimbursement</p>
+
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="number"
+            placeholder="Tahun"
+            value={filter.year}
+            onChange={e => setFilter(f => ({ ...f, year: e.target.value }))}
+            className="border px-2 py-1 rounded"
+          />
+
+          <select
+            value={filter.month}
+            onChange={e => setFilter(f => ({ ...f, month: e.target.value }))}
+            className="border px-2 py-1 rounded"
+          >
+            <option value="">Semua Bulan</option>
+            <option value="1">Jan</option>
+            <option value="2">Feb</option>
+            <option value="3">Mar</option>
+            <option value="4">Apr</option>
+            <option value="5">Mei</option>
+            <option value="6">Jun</option>
+            <option value="7">Jul</option>
+            <option value="8">Agu</option>
+            <option value="9">Sep</option>
+            <option value="10">Okt</option>
+            <option value="11">Nov</option>
+            <option value="12">Des</option>
+          </select>
+
+          <input
+            type="date"
+            value={filter.startDate}
+            onChange={e => setFilter(f => ({ ...f, startDate: e.target.value }))}
+            className="border px-2 py-1 rounded"
+          />
+
+          <input
+            type="date"
+            value={filter.endDate}
+            onChange={e => setFilter(f => ({ ...f, endDate: e.target.value }))}
+            className="border px-2 py-1 rounded"
+          />
+        </div>
+      </div>
+
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {[
           { label: 'Total Disetujui', value: formatCurrency(totalApproved), color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
           { label: 'Sudah Dibayar', value: formatCurrency(totalPaid), color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-          { label: 'Menunggu Persetujuan', value: reimbursements.filter(r => r.status === 'Pending').length, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+          { label: 'Menunggu Persetujuan', value: pendingCount, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+          { label: 'Total Reimbursement', value: formatCurrency(totalFiltered), color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} border rounded-xl p-4 text-center`}>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -93,9 +230,9 @@ export default function Reimbursement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {reimbursements.length === 0 ? (
+              {filteredReimbursements.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-10 text-gray-400">Tidak ada data reimbursement</td></tr>
-              ) : reimbursements.map(r => (
+              ) : filteredReimbursements.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50 transition-colors" data-testid={`row-reimb-${r.id}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
