@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 type MenuItem = 'Dashboard' | 'Karyawan' | 'Absensi' | 'Shift' | 'Cuti & Izin' | 'Lembur' | 'Reimbursement' | 'Laporan' | 'Pengumuman' | 'Notifikasi' | 'Payroll' | 'Pengaturan';
 
-const MENU_ITEMS: MenuItem[] = ['Dashboard', 'Karyawan', 'Absensi', 'Shift', 'Cuti & Izin', 'Lembur', 'Reimbursement', 'Laporan', 'Pengumuman', 'Notifikasi', 'Payroll', 'Pengaturan'];
+const MENU_ITEMS: MenuItem[] = ['Dashboard', 'Absensi', 'Shift', 'Cuti & Izin', 'Lembur', 'Reimbursement', 'Laporan', 'Pengumuman', 'Notifikasi', 'Payroll', 'Pengaturan'];
 const ROLES = [
   'Director',
   'Admin',
@@ -21,22 +21,21 @@ const ROLES = [
   'Engineering',
   'Production',
   'Logistic',
-  'Karyawan',
 ] as const;
 
 type PermissionRole = typeof ROLES[number];
 
-const PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
-  Dashboard: ['Director','Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+const DEFAULT_PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
+  Dashboard: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
   Karyawan: ['Director', 'Admin', 'HRD'],
-  Absensi: ['Director', 'Admin', 'HRD', 'GA', 'Karyawan'],
-  Shift: ['Director', 'Admin', 'HRD', 'Production', 'Logistic', 'Karyawan'],
-  'Cuti & Izin': ['Director', 'Admin', 'HRD', 'GA', 'Karyawan'],
+  Absensi: ['Director', 'Admin', 'HRD', 'GA'],
+  Shift: ['Director', 'Admin', 'HRD', 'Production', 'Logistic'],
+  'Cuti & Izin': ['Director', 'Admin', 'HRD', 'GA'],
   Lembur: ['Director', 'Admin', 'HRD', 'Finance', 'Engineering', 'Production', 'Logistic'],
-  Reimbursement: ['Director','Admin','Supervisor', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Laporan: ['Director', 'Admin', 'HRD', 'GA','Finance', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Pengumuman: ['Director', 'Admin', 'HRD', 'GA','Finance', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Notifikasi: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Reimbursement: ['Director', 'Admin', 'Supervisor', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Laporan: ['Director', 'Admin', 'HRD', 'GA', 'Finance', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Pengumuman: ['Director', 'Admin', 'HRD', 'GA', 'Finance', 'Marketing', 'Engineering', 'Production', 'Logistic'],
+  Notifikasi: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
   Payroll: ['Director', 'Admin', 'HRD', 'Finance'],
   Pengaturan: ['Director', 'Admin', 'HRD'],
 };
@@ -44,6 +43,10 @@ const PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
 export default function Pengaturan() {
   const { toast } = useToast();
   const [users, setUsers] = useLocalStorage<AppUser[]>('hrptaa_users', SEED_USERS);
+  const [permissions, setPermissions] = useLocalStorage<Record<MenuItem, PermissionRole[]>>(
+    'hrptaa_permissions',
+    DEFAULT_PERMISSIONS
+  );
 
   function handleRoleChange(id: string, role: UserRole) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
@@ -53,6 +56,33 @@ export default function Pengaturan() {
   function handleStatusChange(id: string) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === 'Aktif' ? 'Nonaktif' : 'Aktif' } : u));
     toast({ title: 'Berhasil', description: 'Status pengguna berhasil diperbarui.' });
+  }
+
+  function handlePermissionToggle(menu: MenuItem, role: PermissionRole) {
+    if (role === 'Admin' || role === 'Director') {
+      toast({
+        title: 'Tidak bisa diubah',
+        description: 'Admin dan Director wajib memiliki akses ke semua fitur.',
+      });
+      return;
+    }
+
+    setPermissions(prev => {
+      const currentRoles = prev[menu] || [];
+      const hasAccess = currentRoles.includes(role);
+
+      return {
+        ...prev,
+        [menu]: hasAccess
+          ? currentRoles.filter(r => r !== role)
+          : [...currentRoles, role],
+      };
+    });
+
+    toast({
+      title: 'Berhasil',
+      description: 'Hak akses role berhasil diperbarui.',
+    });
   }
 
   const roleColor: Record<string, string> = {
@@ -94,22 +124,25 @@ export default function Pengaturan() {
                 <tr key={menu} className="hover:bg-gray-50 transition-colors" data-testid={`row-perm-${menu}`}>
                   <td className="px-5 py-3 font-medium text-gray-800">{menu}</td>
                   {ROLES.map(role => {
-                    const hasAccess = PERMISSIONS[menu].includes(role);
+                    const hasAccess = permissions[menu]?.includes(role);
                     return (
                       <td key={role} className="px-4 py-3 text-center">
-                        {hasAccess ? (
-                          <div className="flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handlePermissionToggle(menu, role)}
+                          disabled={role === 'Admin' || role === 'Director'}
+                          className="mx-auto flex justify-center disabled:cursor-not-allowed disabled:opacity-80"
+                        >
+                          {hasAccess ? (
                             <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
                               <Check className="w-3.5 h-3.5 text-green-600" />
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
+                          ) : (
                             <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
                               <Minus className="w-3.5 h-3.5 text-gray-400" />
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </button>
                       </td>
                     );
                   })}

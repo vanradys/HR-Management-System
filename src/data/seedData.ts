@@ -190,12 +190,12 @@ export const SEED_PAYROLL: PayrollRecord[] = SEED_EMPLOYEES.filter(e => e.status
 });
 
 export const SEED_USERS: AppUser[] = [
-  { id: 'EMP001', name: 'Andi Kusuma', email: 'andi@company.com', role: 'Karyawan', status: 'Aktif' },
+  { id: 'EMP001', name: 'Andi Kusuma', email: 'andi@company.com', role: 'Marketing', status: 'Aktif' },
   { id: 'EMP002', name: 'Siti Rahayu', email: 'siti@company.com', role: 'Finance', status: 'Aktif' },
   { id: 'EMP003', name: 'Budi Santoso', email: 'budi@company.com', role: 'Finance', status: 'Aktif' },
   { id: 'EMP004', name: 'Dewi Lestari', email: 'dewi@company.com', role: 'Supervisor', status: 'Aktif' },
-  { id: 'EMP005', name: 'Rizki Fauzan', email: 'rizki@company.com', role: 'Karyawan', status: 'Aktif' },
-  { id: 'EMP006', name: 'Nurul Hidayah', email: 'nurul@company.com', role: 'Karyawan', status: 'Nonaktif' },
-  { id: 'EMP007', name: 'Agus Wirawan', email: 'agus@company.com', role: 'Karyawan', status: 'Aktif' },
-  { id: 'EMP008', name: 'Putri Amaliya', email: 'putri@company.com', role: 'Karyawan', status: 'Aktif' },
+  { id: 'EMP005', name: 'Rizki Fauzan', email: 'rizki@company.com', role: 'GA', status: 'Aktif' },
+  { id: 'EMP006', name: 'Nurul Hidayah', email: 'nurul@company.com', role: 'Engineering', status: 'Nonaktif' },
+  { id: 'EMP007', name: 'Agus Wirawan', email: 'agus@company.com', role: 'Finance', status: 'Aktif' },
+  { id: 'EMP008', name: 'Putri Amaliya', email: 'putri@company.com', role: 'Logistic', status: 'Aktif' },
 ];
