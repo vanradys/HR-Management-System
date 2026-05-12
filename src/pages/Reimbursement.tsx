@@ -326,7 +326,7 @@ export default function Reimbursement() {
       };
       reader.readAsDataURL(file);
     }}
-    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+    className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
   />
 </div>
 
