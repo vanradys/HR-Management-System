@@ -19,6 +19,7 @@ import Pengumuman from "@/pages/Pengumuman";
 import Notifikasi from "@/pages/Notifikasi";
 import Payroll from "@/pages/Payroll";
 import Pengaturan from "@/pages/Pengaturan";
+import LaporanHarian from "@/pages/LaporanHarian";
 
 import {
   SEED_EMPLOYEES, SEED_ATTENDANCE, SEED_SHIFTS, SEED_LEAVES,
@@ -83,6 +84,7 @@ function AppRouter() {
         <Route path="/notifikasi" component={Notifikasi} />
         <Route path="/payroll" component={Payroll} />
         <Route path="/pengaturan" component={Pengaturan} />
+        <Route path="/laporan-harian" component={LaporanHarian} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

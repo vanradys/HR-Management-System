@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Lembur', path: '/lembur', icon: Timer, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
   { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ['Admin', 'Finance', 'Karyawan'] },
   { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
+  { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
   { label: 'Pengumuman', path: '/pengumuman', icon: Megaphone, allowedRoles: ['Admin', 'HR', 'Manager', 'Karyawan'] },
   { label: 'Notifikasi', path: '/notifikasi', icon: Bell, allowedRoles: ['Admin', 'HR', 'Finance', 'Manager', 'Karyawan'] },
   { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'HR', 'Finance'] },
