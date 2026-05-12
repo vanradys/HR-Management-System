@@ -6,11 +6,60 @@ import { SEED_PAYROLL } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatCurrency } from '@/utils/helpers';
 
+function getPayrollPeriod(month: number, year: number) {
+  const startDate = new Date(year, month - 1, 21);
+  const endDate = new Date(year, month, 20);
+
+  return { startDate, endDate };
+}
+
 export default function Payroll() {
   const [payroll] = useLocalStorage<PayrollRecord[]>('hrptaa_payroll', SEED_PAYROLL);
   const [slipTarget, setSlipTarget] = useState<PayrollRecord | null>(null);
 
-  const totalPayroll = payroll.reduce((s, p) => s + p.totalSalary, 0);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  function getPayrollPeriod(month: number, year: number) {
+    const startDate = new Date(year, month - 1, 21);
+    const endDate = new Date(year, month, 20);
+
+    return { startDate, endDate };
+  }
+
+  const { startDate, endDate } = getPayrollPeriod(
+    selectedMonth,
+    selectedYear
+  );
+
+  const selectedMonthName = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ][selectedMonth - 1];
+
+  const filteredPayroll = payroll.filter((record) => {
+    return record.month === `${selectedMonthName} ${selectedYear}`;
+  });
+
+  const totalPayroll = filteredPayroll.reduce(
+    (sum, p) => sum + p.totalSalary,
+    0
+  );
+
+  const totalReimbursement = filteredPayroll.reduce(
+    (sum, p) => sum + p.reimbursement,
+    0
+  );
+
+  const totalOvertime = filteredPayroll.reduce(
+    (sum, p) => sum + p.overtimePay,
+    0
+  );
+
+  const totalDeduction = filteredPayroll.reduce(
+    (sum, p) => sum + p.lateDeduction + p.absenceDeduction,
+    0
+  );
 
   return (
     <div className="space-y-5">
