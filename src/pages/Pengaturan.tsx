@@ -12,7 +12,9 @@ type MenuItem = 'Dashboard' | 'Karyawan' | 'Absensi' | 'Shift' | 'Cuti & Izin' |
 const MENU_ITEMS: MenuItem[] = ['Dashboard', 'Karyawan', 'Absensi', 'Shift', 'Cuti & Izin', 'Lembur', 'Reimbursement', 'Laporan', 'Pengumuman', 'Notifikasi', 'Payroll', 'Pengaturan'];
 const ROLES = [
   'Director',
+  'Admin',
   'HRD',
+  'Supervisor',
   'Finance',
   'GA',
   'Marketing',
@@ -25,18 +27,18 @@ const ROLES = [
 type PermissionRole = typeof ROLES[number];
 
 const PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
-  Dashboard: ['Director', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Karyawan: ['Director', 'HRD'],
-  Absensi: ['Director', 'HRD', 'GA', 'Karyawan'],
-  Shift: ['Director', 'HRD', 'Production', 'Logistic', 'Karyawan'],
-  'Cuti & Izin': ['Director', 'HRD', 'GA', 'Karyawan'],
-  Lembur: ['Director', 'HRD', 'Finance', 'Engineering', 'Production', 'Logistic'],
-  Reimbursement: ['Director', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Laporan: ['Director', 'HRD', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Pengumuman: ['Director', 'HRD', 'GA'],
-  Notifikasi: ['Director', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
-  Payroll: ['Director', 'HRD', 'Finance'],
-  Pengaturan: ['Director', 'HRD'],
+  Dashboard: ['Director','Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Karyawan: ['Director', 'Admin', 'HRD'],
+  Absensi: ['Director', 'Admin', 'HRD', 'GA', 'Karyawan'],
+  Shift: ['Director', 'Admin', 'HRD', 'Production', 'Logistic', 'Karyawan'],
+  'Cuti & Izin': ['Director', 'Admin', 'HRD', 'GA', 'Karyawan'],
+  Lembur: ['Director', 'Admin', 'HRD', 'Finance', 'Engineering', 'Production', 'Logistic'],
+  Reimbursement: ['Director','Admin','Supervisor', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Laporan: ['Director', 'Admin', 'HRD', 'GA','Finance', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Pengumuman: ['Director', 'Admin', 'HRD', 'GA','Finance', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Notifikasi: ['Director', 'Admin', 'HRD', 'Finance', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic', 'Karyawan'],
+  Payroll: ['Director', 'Admin', 'HRD', 'Finance'],
+  Pengaturan: ['Director', 'Admin', 'HRD'],
 };
 
 export default function Pengaturan() {
