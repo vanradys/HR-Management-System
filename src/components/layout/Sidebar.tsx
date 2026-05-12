@@ -44,7 +44,7 @@ export function Sidebar({ role, unreadCount, isOpen, onClose }: SidebarProps) {
 
   const isActive = (path: string) => {
     if (path === '/') return location === '/';
-    return location.startsWith(path);
+    return location === path;
   };
 
   return (

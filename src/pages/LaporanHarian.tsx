@@ -87,126 +87,167 @@ export default function LaporanHarian() {
     }, []);
 
     return (
-        <div className="p-6 text-white">
-            <h1 className="text-2xl font-bold mb-4">Laporan Harian</h1>
-
-            {/* Nama */}
-            <input
-                className="w-full mb-2 p-2 text-black"
-                placeholder="Nama"
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-            />
-
-            {/* Tanggal */}
-            <input
-                type="date"
-                className="w-full mb-4 p-2 text-black"
-                value={tanggal}
-                onChange={(e) => setTanggal(e.target.value)}
-            />
-
-            {/* TASK */}
-            <div className="mb-4">
-                <h2 className="font-bold mb-2">Tugas Hari Ini</h2>
-
-                {tasks.map((t, i) => (
-                    <div key={i} className="border p-3 mb-2 rounded">
-                        <input
-                            placeholder="Nama pekerjaan"
-                            className="w-full mb-1 p-1 text-black"
-                            value={t.nama}
-                            onChange={(e) =>
-                                updateTask(i, "nama", e.target.value)
-                            }
-                        />
-                        <input
-                            type="date"
-                            className="w-full mb-1 p-1 text-black"
-                            value={t.deadline}
-                            onChange={(e) =>
-                                updateTask(i, "deadline", e.target.value)
-                            }
-                        />
-                        <input
-                            type="number"
-                            placeholder="Progress %"
-                            className="w-full mb-1 p-1 text-black"
-                            value={t.progress}
-                            onChange={(e) =>
-                                updateTask(i, "progress", Number(e.target.value))
-                            }
-                        />
-                        <input
-                            placeholder="Catatan"
-                            className="w-full mb-1 p-1 text-black"
-                            value={t.catatan}
-                            onChange={(e) =>
-                                updateTask(i, "catatan", e.target.value)
-                            }
-                        />
-
-                        <select
-                            className="w-full p-1 text-black"
-                            value={t.status}
-                            onChange={(e) =>
-                                updateTask(i, "status", e.target.value as Task["status"])
-                            }
-                        >
-                            <option value="belum">Belum selesai</option>
-                            <option value="selesai">Selesai</option>
-                        </select>
-                    </div>
-                ))}
+        <div className="p-6 space-y-6 text-gray-900">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Laporan Harian</h1>
+                    <p className="text-sm text-gray-500">
+                        Catat pekerjaan harian, progress tugas, catatan tambahan, dan rencana besok.
+                    </p>
+                </div>
 
                 <button
                     onClick={addTask}
-                    className="bg-blue-500 px-3 py-1 rounded"
+                    className="bg-[#E30613] hover:bg-red-700 text-white px-5 py-2 rounded-xl font-semibold transition-colors"
                 >
                     + Tambah Tugas
                 </button>
             </div>
 
-            {/* TOTAL */}
-            <p className="mb-4">Total Progress: {totalProgress}%</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <p className="text-sm text-gray-500">Total Tugas</p>
+                    <p className="text-3xl font-bold text-[#001E8A]">{tasks.length}</p>
+                </div>
 
-            {/* CATATAN */}
-            <textarea
-                className="w-full mb-2 p-2 text-black"
-                placeholder="Catatan tambahan"
-                value={catatanTambahan}
-                onChange={(e) => setCatatanTambahan(e.target.value)}
-            />
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <p className="text-sm text-gray-500">Total Progress</p>
+                    <p className="text-3xl font-bold text-green-600">{totalProgress}%</p>
+                </div>
 
-            {/* RENCANA */}
-            <textarea
-                className="w-full mb-4 p-2 text-black"
-                placeholder="Rencana besok & target"
-                value={rencana}
-                onChange={(e) => setRencana(e.target.value)}
-            />
-
-            {/* BUTTON */}
-            <div className="flex gap-2">
-                <button
-                    onClick={() => setStatus("draft")}
-                    className="bg-gray-500 px-4 py-2 rounded"
-                >
-                    Simpan Draft
-                </button>
-
-                <button
-                    onClick={handleSubmit}
-                    className="bg-green-600 px-4 py-2 rounded"
-                >
-                    Submit
-                </button>
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <p className="text-sm text-gray-500">Status</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                        {isSelesai ? "Selesai" : "Belum Selesai"}
+                    </p>
+                </div>
             </div>
 
-            {/* STATUS */}
-            <p className="mt-4">
-                Status: {isSelesai ? "Selesai" : "Belum Selesai"}
-            </p>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100">
+                    <h2 className="font-bold text-gray-900">Informasi Laporan</h2>
+                </div>
+
+                <div className="p-6 space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Nama
+                            </label>
+                            <input
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
+                                placeholder="Masukkan nama karyawan"
+                                value={nama}
+                                onChange={(e) => setNama(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Tanggal
+                            </label>
+                            <input
+                                type="date"
+                                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
+                                value={tanggal}
+                                onChange={(e) => setTanggal(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 className="font-bold text-gray-900">Tugas Hari Ini</h2>
+                                <p className="text-sm text-gray-500">
+                                    Tambahkan daftar pekerjaan dan progress masing-masing tugas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {tasks.map((t, i) => (
+                                <div
+                                    key={i}
+                                    className="border border-gray-100 rounded-2xl p-4 bg-gray-50"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                        <input
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
+                                            placeholder="Nama pekerjaan"
+                                            value={t.nama}
+                                            onChange={(e) => updateTask(i, "nama", e.target.value)}
+                                        />
+
+                                        <input
+                                            type="date"
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
+                                            value={t.deadline}
+                                            onChange={(e) => updateTask(i, "deadline", e.target.value)}
+                                        />
+
+                                        <input
+                                            type="number"
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
+                                            placeholder="Progress %"
+                                            value={t.progress}
+                                            onChange={(e) => updateTask(i, "progress", Number(e.target.value))}
+                                        />
+
+                                        <select
+                                            className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
+                                            value={t.status}
+                                            onChange={(e) => updateTask(i, "status", e.target.value as Task["status"])}
+                                        >
+                                            <option value="belum">Belum selesai</option>
+                                            <option value="selesai">Selesai</option>
+                                        </select>
+                                    </div>
+
+                                    <input
+                                        className="w-full mt-3 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
+                                        placeholder="Catatan tugas"
+                                        value={t.catatan}
+                                        onChange={(e) => updateTask(i, "catatan", e.target.value)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <textarea
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
+                        rows={3}
+                        placeholder="Catatan tambahan"
+                        value={catatanTambahan}
+                        onChange={(e) => setCatatanTambahan(e.target.value)}
+                    />
+
+                    <textarea
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
+                        rows={3}
+                        placeholder="Rencana besok & target"
+                        value={rencana}
+                        onChange={(e) => setRencana(e.target.value)}
+                    />
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            onClick={() => setStatus("draft")}
+                            className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50"
+                        >
+                            Simpan Draft
+                        </button>
+
+                        <button
+                            onClick={handleSubmit}
+                            className="px-5 py-2 rounded-xl bg-[#E30613] text-white font-semibold hover:bg-red-700"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
