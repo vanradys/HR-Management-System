@@ -331,9 +331,19 @@ export default function Reimbursement() {
 
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan *</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder="Jelaskan keperluan pengeluaran..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none" data-testid="input-reimb-desc" />
-              </div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan *</label>
+  <textarea
+    value={form.description}
+    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+    rows={2}
+    placeholder="Jelaskan keperluan pengeluaran..."
+    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none"
+    data-testid="input-reimb-desc"
+  />
+  <p className="text-xs text-gray-500 mt-1 italic">
+    *Note: semua bukti wajib diserahkan ke purchasing
+  </p>
+</div>
             </div>
             <div className="px-5 py-4 border-t flex justify-end gap-3">
               <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
