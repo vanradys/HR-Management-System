@@ -22,6 +22,7 @@ export interface Attendance {
   checkOut: string;
   status: 'Hadir' | 'Terlambat' | 'Cuti' | 'Sakit' | 'Absen' | 'Izin';
   location: string;
+  isTestData?: boolean;
 }
 
 export type ShiftType = 'Pagi' | 'Malam' | 'Libur' | 'Cuti' | 'Izin' | '-';
