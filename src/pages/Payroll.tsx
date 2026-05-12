@@ -63,11 +63,9 @@ export default function Payroll() {
     0
   );
 
-  if (
-    auth.user?.role !== "HR" &&
-    auth.user?.role !== "Admin" &&
-    auth.user?.role !== "Finance"
-  ) {
+  const allowedRoles = ["Admin", "HR"];
+
+  if (!allowedRoles.includes(auth.role)) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
