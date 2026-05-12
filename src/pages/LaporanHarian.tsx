@@ -6,6 +6,17 @@ type Task = {
     progress: number;
     catatan: string;
     status: "belum" | "selesai";
+    source?: "hari_ini" | "rencana_besok" | "manual";
+};
+
+type DailyReport = {
+    nama: string;
+    tanggal: string;
+    tasks: Task[];
+    catatanTambahan: string;
+    rencana: string;
+    totalProgress: number;
+    status: "draft" | "submitted";
 };
 
 export default function LaporanHarian() {
@@ -18,14 +29,26 @@ export default function LaporanHarian() {
     const [catatanTambahan, setCatatanTambahan] = useState("");
     const [rencana, setRencana] = useState("");
     const [status, setStatus] = useState<"draft" | "submitted">("draft");
+    const [reports, setReports] = useState<DailyReport[]>([]);
 
     // tambah task
     const addTask = () => {
-        setTasks([
-            ...tasks,
-            { nama: "", deadline: "", progress: 0, catatan: "", status: "belum" },
-        ]);
-    };
+    setTasks([
+        ...tasks,
+        {
+            nama: "",
+            deadline: "",
+            progress: 0,
+            catatan: "",
+            status: "belum",
+            source: "hari_ini",
+        },
+    ]);
+};
+
+const removeTask = (index: number) => {
+    setTasks(tasks.filter((_, i) => i !== index));
+};
 
     // update task
     const updateTask = <K extends keyof Task>(
@@ -52,29 +75,55 @@ export default function LaporanHarian() {
             : 0;
 
     // cek selesai
-    const isSelesai = tasks.length > 0 && tasks.every((t) => t.status === "selesai");
+    const isSelesai =
+    tasks.length > 0 && tasks.every((t) => t.status === "selesai");
 
     // simpan
-    const handleSubmit = () => {
-        setStatus("submitted");
+    const saveReport = (newStatus: "draft" | "submitted") => {
+    if (!nama.trim()) {
+        alert("Nama wajib diisi.");
+        return;
+    }
 
-        const data = {
-            nama,
-            tanggal,
-            tasks,
-            catatanTambahan,
-            rencana,
-            totalProgress,
-            status: isSelesai ? "selesai" : "belum selesai",
-        };
+    if (tanggal !== today) {
+        alert("Draft hanya bisa diedit sampai hari yang sama.");
+        return;
+    }
 
-        localStorage.setItem("laporan-harian", JSON.stringify(data));
-        alert("Laporan disimpan!");
+    const data: DailyReport = {
+        nama,
+        tanggal,
+        tasks,
+        catatanTambahan,
+        rencana,
+        totalProgress,
+        status: newStatus,
     };
+
+    const updatedReports = [
+        ...reports.filter((r) => r.tanggal !== tanggal),
+        data,
+    ];
+
+    setReports(updatedReports);
+
+    localStorage.setItem(
+        "laporan-harian-list",
+        JSON.stringify(updatedReports)
+    );
+
+    setStatus(newStatus);
+
+    alert(
+        newStatus === "draft"
+            ? "Draft berhasil disimpan!"
+            : "Laporan berhasil disubmit!"
+    );
+};
 
     // load data
     useEffect(() => {
-        const saved = localStorage.getItem("laporan-harian");
+        const saved = localStorage.getItem("laporan-harian-list");
         if (saved) {
             const data = JSON.parse(saved);
             if (data.tanggal === today) {
@@ -100,6 +149,7 @@ export default function LaporanHarian() {
                 <button
                     onClick={addTask}
                     className="bg-[#E30613] hover:bg-red-700 text-white px-5 py-2 rounded-xl font-semibold transition-colors"
+                    
                 >
                     + Tambah Tugas
                 </button>
@@ -194,7 +244,7 @@ export default function LaporanHarian() {
                                     key={i}
                                     className="border border-gray-100 rounded-2xl p-4 bg-gray-50"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                                         <input
                                             className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#001E8A]"
                                             placeholder="Nama pekerjaan"
@@ -225,6 +275,12 @@ export default function LaporanHarian() {
                                             <option value="belum">Belum selesai</option>
                                             <option value="selesai">Selesai</option>
                                         </select>
+                                        <button
+    onClick={() => removeTask(i)}
+    className="text-red-500 text-sm font-semibold hover:text-red-700"
+>
+    Hapus
+</button>
                                     </div>
 
                                     <input
@@ -256,14 +312,14 @@ export default function LaporanHarian() {
 
                     <div className="flex justify-end gap-3 pt-2">
                         <button
-                            onClick={() => setStatus("draft")}
+                            onClick={() => saveReport("draft")}
                             className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50"
                         >
                             Simpan Draft
                         </button>
 
                         <button
-                            onClick={handleSubmit}
+                            onClick={() => saveReport("submitted")}
                             className="px-5 py-2 rounded-xl bg-[#E30613] text-white font-semibold hover:bg-red-700"
                         >
                             Submit
