@@ -102,6 +102,39 @@ function getLocation() {
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Absensi Hari Ini — {new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</h3>
         
+        <div className="mb-4">
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Selfie Absensi
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    capture="user"
+    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        setSelfiePreview(reader.result as string);
+      };
+
+      reader.readAsDataURL(file);
+    }}
+  />
+
+  {selfiePreview && (
+    <img
+      src={selfiePreview}
+      alt="Preview Selfie"
+      className="mt-3 w-32 h-32 rounded-xl object-cover border border-gray-200"
+    />
+  )}
+</div>
+
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleCheckIn}
