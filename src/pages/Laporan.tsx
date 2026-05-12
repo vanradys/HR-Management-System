@@ -7,11 +7,13 @@ import { SEED_REPORTS } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDateTime, generateId, getCurrentDatetime } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
+import { SEED_EMPLOYEES } from '@/data/seedData';
 
 export default function Laporan() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [reports, setReports] = useLocalStorage<FieldReport[]>('hrptaa_reports', SEED_REPORTS);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [detailReport, setDetailReport] = useState<FieldReport | null>(null);
   const [commentText, setCommentText] = useState('');
@@ -27,6 +29,31 @@ export default function Laporan() {
       title: form.title, description: form.description, location: form.location,
       mediaUrls: [], datetime: getCurrentDatetime(), comments: [],
     };
+
+    const taggedEmployees = SEED_EMPLOYEES.filter((employee) =>
+      form.description
+        .toLowerCase()
+        .includes(`@${employee.name.toLowerCase()}`)
+    );
+
+    const mentionNotifications = taggedEmployees.map((employee) => ({
+      id: generateId(),
+      type: 'report',
+      title: 'Anda ditandai dalam laporan',
+      message: `Anda ditandai dalam laporan "${form.title}"`,
+      targetUser: employee.name,
+      timestamp: getCurrentDatetime(),
+      read: false,
+    }));
+
+    mentionNotifications.forEach((notif) => {
+      addNotification(
+        'report_comment',
+        notif.title,
+        notif.message
+      );
+    });
+
     setReports(prev => [newReport, ...prev]);
     toast({ title: 'Berhasil', description: 'Laporan lapangan berhasil dikirim.' });
     setModalOpen(false);
@@ -48,6 +75,17 @@ export default function Laporan() {
     setCommentText('');
   }
 
+  const filteredReports = reports.filter((report) => {
+    const keyword = searchKeyword.toLowerCase();
+
+    return (
+      report.title.toLowerCase().includes(keyword) ||
+      report.description.toLowerCase().includes(keyword) ||
+      report.location.toLowerCase().includes(keyword) ||
+      report.employeeName.toLowerCase().includes(keyword)
+    );
+  });
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -66,11 +104,22 @@ export default function Laporan() {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          placeholder="Cari laporan berdasarkan judul, lokasi, deskripsi, atau nama karyawan..."
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-[#001E8A]"
+        />
+      </div>
+
       {/* Report cards */}
       <div className="space-y-4">
         {reports.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-10 text-center text-gray-400">Belum ada laporan lapangan</div>
-        ) : reports.map(report => (
+        ) : filteredReports.map((report) => (
           <div key={report.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5" data-testid={`card-report-${report.id}`}>
             <div className="flex items-start gap-3">
               <EmployeeAvatar name={report.employeeName} size="md" />
