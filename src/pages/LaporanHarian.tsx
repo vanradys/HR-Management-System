@@ -123,18 +123,27 @@ const removeTask = (index: number) => {
 
     // load data
     useEffect(() => {
-        const saved = localStorage.getItem("laporan-harian-list");
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (data.tanggal === today) {
-                setNama(data.nama);
-                setTasks(data.tasks);
-                setCatatanTambahan(data.catatanTambahan);
-                setRencana(data.rencana);
-                setStatus(data.status === "draft" ? "draft" : "submitted");
-            }
+    const saved = localStorage.getItem("laporan-harian-list");
+
+    if (saved) {
+        const parsed: DailyReport[] = JSON.parse(saved);
+
+        setReports(parsed);
+
+        const todayReport = parsed.find(
+            (r) => r.tanggal === today
+        );
+
+        if (todayReport) {
+            setNama(todayReport.nama);
+            setTanggal(todayReport.tanggal);
+            setTasks(todayReport.tasks);
+            setCatatanTambahan(todayReport.catatanTambahan);
+            setRencana(todayReport.rencana);
+            setStatus(todayReport.status);
         }
-    }, []);
+    }
+}, []);
 
     return (
         <div className="p-6 space-y-6 text-gray-900">
@@ -297,7 +306,7 @@ const removeTask = (index: number) => {
                     <textarea
                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
                         rows={3}
-                        placeholder="Catatan tambahan"
+                        placeholder="Tulis hambatan, kendala pekerjaan, hasil koordinasi, informasi penting, atau catatan yang perlu diketahui atasan hari ini."
                         value={catatanTambahan}
                         onChange={(e) => setCatatanTambahan(e.target.value)}
                     />
@@ -305,7 +314,10 @@ const removeTask = (index: number) => {
                     <textarea
                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#001E8A] focus:ring-2 focus:ring-blue-100"
                         rows={3}
-                        placeholder="Rencana besok & target"
+                        placeholder={`Tulis satu rencana per baris, contoh:
+                        - Selesaikan revisi drawing
+                        - Follow up vendor
+                        - Meeting dengan tim`}
                         value={rencana}
                         onChange={(e) => setRencana(e.target.value)}
                     />
@@ -363,6 +375,157 @@ const removeTask = (index: number) => {
       <p className="text-sm text-gray-500">Status: {isSelesai ? "Selesai" : "Belum selesai"}</p>
     </div>
   </div>
+)}
+{activeTab === "todo" && (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex justify-between items-center mb-4">
+            <div>
+                <h2 className="font-bold text-gray-900">
+                    To Do List Harian
+                </h2>
+
+                <p className="text-sm text-gray-500">
+                    Daftar tugas hari ini yang masih berjalan.
+                </p>
+            </div>
+
+            <button
+                onClick={addTask}
+                className="px-4 py-2 rounded-xl bg-[#E30613] text-white text-sm font-semibold"
+            >
+                + Tambah Item
+            </button>
+        </div>
+
+        {tasks.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">
+                Belum ada tugas.
+            </div>
+        ) : (
+            <div className="space-y-3">
+                {tasks.map((task, index) => (
+                    <div
+                        key={index}
+                        className="border border-gray-100 rounded-xl p-4 bg-gray-50"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="font-semibold text-gray-900">
+                                    {task.nama || "Tanpa nama tugas"}
+                                </p>
+
+                                <p className="text-sm text-gray-500">
+                                    Deadline: {task.deadline || "-"}
+                                </p>
+
+                                <p className="text-sm text-gray-500">
+                                    Progress: {task.progress}%
+                                </p>
+
+                                <p className="text-sm text-gray-500">
+                                    Status:
+                                    {task.status === "selesai"
+                                        ? " Selesai"
+                                        : " Belum selesai"}
+                                </p>
+
+                                <p className="text-sm text-gray-500">
+                                    Catatan:
+                                    {task.catatan || "-"}
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => removeTask(index)}
+                                className="text-red-500 text-sm font-semibold"
+                            >
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+)}
+
+{activeTab === "riwayat" && (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="font-bold text-gray-900 mb-4">
+            Riwayat Laporan
+        </h2>
+
+        {reports.length === 0 ? (
+            <p className="text-sm text-gray-500">
+                Belum ada riwayat laporan.
+            </p>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {reports.map((report, index) => {
+                    const canEdit =
+                        report.tanggal === today &&
+                        report.status === "draft";
+
+                    return (
+                        <div
+                            key={index}
+                            className="border border-gray-100 rounded-2xl p-4 bg-gray-50"
+                        >
+                            <div className="flex justify-between items-center">
+                                <p className="font-semibold text-gray-900">
+                                    {report.nama}
+                                </p>
+
+                                <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                        report.status === "draft"
+                                            ? "bg-yellow-100 text-yellow-700"
+                                            : "bg-green-100 text-green-700"
+                                    }`}
+                                >
+                                    {report.status}
+                                </span>
+                            </div>
+
+                            <p className="text-xs text-gray-500 mt-2">
+                                {report.tanggal}
+                            </p>
+
+                            <p className="text-xs text-gray-500">
+                                {report.tasks.length} tugas
+                            </p>
+
+                            <p className="text-xs text-[#E30613] font-semibold mt-2">
+                                {report.totalProgress}% Progress
+                            </p>
+
+                            {canEdit ? (
+                                <button
+                                    onClick={() => {
+                                        setNama(report.nama);
+                                        setTanggal(report.tanggal);
+                                        setTasks(report.tasks);
+                                        setCatatanTambahan(report.catatanTambahan);
+                                        setRencana(report.rencana);
+                                        setStatus(report.status);
+
+                                        setActiveTab("form");
+                                    }}
+                                    className="mt-3 w-full border border-[#E30613] text-[#E30613] rounded-xl py-2 text-sm font-semibold"
+                                >
+                                    Edit Draft
+                                </button>
+                            ) : (
+                                <p className="mt-3 text-xs text-gray-400">
+                                    Draft tidak bisa diedit setelah hari berganti.
+                                </p>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        )}
+    </div>
 )}
         </div>
     );
