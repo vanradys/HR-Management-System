@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
-import { Search, Send, Megaphone, Users, MoreVertical } from "lucide-react";
+import {
+  Search,
+  Send,
+  Megaphone,
+  Users,
+  MoreVertical,
+  Plus,
+  X,
+} from "lucide-react";
 
-const users = [
+const initialUsers = [
   { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2 },
   { name: "Dika", status: "Online", color: "bg-green-500", unread: 1 },
   { name: "Sakti", status: "Offline", color: "bg-gray-400", unread: 0 },
@@ -18,13 +26,38 @@ type Message = {
   text: string;
   time: string;
 };
+type ChatGroup = {
+  id: string;
+  name: string;
+  members: string[];
+  unread: number;
+  favorite: boolean;
+};
 
 export default function Chat() {
   const [message, setMessage] = useState("");
   const [searchUser, setSearchUser] = useState("");
   const [activeRoom, setActiveRoom] = useState<RoomType>("private");
-  const [selectedUser, setSelectedUser] = useState(users[0]);
-
+  const [chatFilter, setChatFilter] = useState<
+  "all" | "unread" | "favorites" | "groups"
+  >("all");
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const [showNewFilterModal, setShowNewFilterModal] = useState(false);
+  const [newFilterName, setNewFilterName] = useState("");
+  const [customFilters, setCustomFilters] = useState<string[]>([]);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [groups, setGroups] = useState<ChatGroup[]>([
+    {
+      id: "group",
+      name: "Group Divisi",
+      members: ["Hafidz", "Dika", "Sakti"],
+      unread: 0,
+      favorite: false,
+    },
+  ]);
+  const [chatUsers, setChatUsers] = useState(initialUsers);
+  const [selectedUser, setSelectedUser] = useState(initialUsers[0]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -75,23 +108,49 @@ export default function Chat() {
     (msg) => msg.roomId === currentRoomId
   );
 
-  const sendMessage = () => {
-    if (!message.trim()) return;
+const sendMessage = () => {
+  if (!message.trim()) return;
 
-    const newMessage: Message = {
-      id: Date.now(),
-      roomId: currentRoomId,
-      sender: "me",
-      text: message,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setMessage("");
+  const newMessage: Message = {
+    id: Date.now(),
+    roomId: currentRoomId,
+    sender: "me",
+    text: message,
+    time: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
   };
+
+  setMessages((prev) => [...prev, newMessage]);
+  setMessage("");
+};
+
+const createGroup = () => {
+  if (!newGroupName.trim()) return;
+
+  const newGroup: ChatGroup = {
+    id: `group-${Date.now()}`,
+    name: newGroupName,
+    members: selectedMembers,
+    unread: 0,
+    favorite: false,
+  };
+
+  setGroups((prev) => [...prev, newGroup]);
+  setNewGroupName("");
+  setSelectedMembers([]);
+  setShowNewGroupModal(false);
+  setActiveRoom("group");
+};
+
+const createCustomFilter = () => {
+  if (!newFilterName.trim()) return;
+
+  setCustomFilters((prev) => [...prev, newFilterName.trim()]);
+  setNewFilterName("");
+  setShowNewFilterModal(false);
+};
 
   const headerTitle =
     activeRoom === "announcement"
@@ -140,6 +199,42 @@ export default function Chat() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
+
+            {[
+              { key: "all", label: "All" },
+              { key: "unread", label: "Unread" },
+              { key: "favorites", label: "Favorites" },
+              { key: "groups", label: "Groups" },
+              ...customFilters.map((filter) => ({
+                key: filter.toLowerCase().replace(/\s+/g, "-"),
+                label: filter,
+              })),
+            ].map((tab) => (
+              
+              <button
+                key={tab.key}
+                onClick={() => setChatFilter(tab.key as any)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap border ${
+                  chatFilter === tab.key
+                    ? "bg-[#001E8A] text-white border-[#001E8A]"
+                    : "bg-white text-gray-600 border-gray-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+
+            ))}
+
+            <button
+              onClick={() => setShowNewFilterModal(true)}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+          </div>
+
           <div className="p-3 space-y-2">
             <button
               onClick={() => setActiveRoom("announcement")}
@@ -180,16 +275,24 @@ export default function Chat() {
             </button>
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
-              {users
-                .filter((user) =>
+              {chatUsers
+                 .filter((user) =>
                   user.name.toLowerCase().includes(searchUser.toLowerCase())
                 )
                 .map((user, index) => (
                   <button
                     key={index}
                     onClick={() => {
-                      setSelectedUser(user);
+                      setSelectedUser({ ...user, unread: 0 });
                       setActiveRoom("private");
+
+                      setChatUsers((prev) =>
+                        prev.map((item) =>
+                          item.name === user.name
+                            ? { ...item, unread: 0 }
+                            : item
+                        )
+                      );
                     }}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
                       activeRoom === "private" &&
@@ -336,6 +439,46 @@ export default function Chat() {
                         </div>
           </div>
         </div>
+
+{showNewFilterModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+    <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-5">
+
+      <h2 className="text-lg font-bold text-gray-900 mb-4">
+        Add New Filter
+      </h2>
+
+      <input
+        value={newFilterName}
+        onChange={(e) => setNewFilterName(e.target.value)}
+        placeholder="Nama filter"
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#001E8A]"
+      />
+
+      <div className="flex items-center justify-end gap-3 mt-5">
+
+        <button
+          onClick={() => {
+            setShowNewFilterModal(false);
+            setNewFilterName("");
+          }}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={createCustomFilter}
+          className="px-5 py-2 rounded-xl bg-[#001E8A] text-white hover:bg-[#00166b]"
+        >
+          Save
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
 
       </div>
     </div>
