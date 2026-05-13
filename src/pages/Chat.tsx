@@ -7,6 +7,7 @@ import {
   MoreVertical,
   Plus,
   X,
+  ArrowLeft,
 } from "lucide-react";
 
 const initialUsers = [
@@ -443,8 +444,20 @@ const createCustomFilter = () => {
 
   {/* Header */}
   <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
-    
+
     <div className="flex items-center gap-3">
+      <button
+      onClick={() => setMobileView("list")}
+      className="md:hidden w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
+      <button
+      onClick={() => setMobileView("list")}
+      className="md:hidden w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
 
       <div className="relative">
         <div className="w-12 h-12 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold text-lg">
