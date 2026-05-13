@@ -44,6 +44,7 @@ export default function Chat() {
   >("all");
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showNewFilterModal, setShowNewFilterModal] = useState(false);
+  const [showContactsModal, setShowContactsModal] = useState(false);
   const [newFilterName, setNewFilterName] = useState("");
   const [customFilters, setCustomFilters] = useState<string[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
@@ -58,6 +59,10 @@ export default function Chat() {
     },
   ]);
   const [chatUsers, setChatUsers] = useState(initialUsers);
+  const [activeChatNames, setActiveChatNames] = useState<string[]>([
+  "Hafidz",
+  "Dika",
+]);
   const [selectedUser, setSelectedUser] = useState(initialUsers[0]);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -125,6 +130,7 @@ const filteredUsers = chatUsers.filter((user) => {
     .includes(searchUser.toLowerCase());
 
   if (!matchSearch) return false;
+  if (!activeChatNames.includes(user.name)) return false;
 
   if (chatFilter === "groups") return false;
   if (chatFilter === "unread") return user.unread > 0;
@@ -295,23 +301,22 @@ const createCustomFilter = () => {
               </button>
             )}
 
-            {chatFilter === "all" && (
-              <button
-                onClick={() => setShowNewGroupModal(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
-              >
-                <Users className="w-5 h-5 text-blue-500" />
+            <button
+  onClick={() => setShowContactsModal(true)}
+  className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+>
+  <Users className="w-5 h-5 text-[#001E8A]" />
 
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    Grup Baru
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Buat grup baru
-                  </p>
-                </div>
-              </button>
-            )}
+  <div>
+    <p className="text-sm font-semibold text-gray-900">
+      Kontak Internal
+    </p>
+
+    <p className="text-xs text-gray-500">
+      Daftar karyawan internal
+    </p>
+  </div>
+</button>
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
             {filteredGroups.map((group) => (
@@ -617,6 +622,78 @@ const createCustomFilter = () => {
         Buat Grup
       </button>
 
+    </div>
+  </div>
+)}
+{showContactsModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+
+      <div className="flex items-center justify-between mb-5">
+
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">
+            Kontak Internal
+          </h2>
+
+          <p className="text-sm text-gray-500">
+            Daftar karyawan internal
+          </p>
+        </div>
+
+        <button
+          onClick={() => setShowContactsModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+      </div>
+
+      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+
+        {[...chatUsers]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((user) => (
+
+            <button
+              key={user.name}
+              onClick={() => {
+
+                if (!activeChatNames.includes(user.name)) {
+                  setActiveChatNames((prev) => [
+                    ...prev,
+                    user.name,
+                  ]);
+                }
+
+                setSelectedUser(user);
+                setActiveRoom("private");
+                setShowContactsModal(false);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-left"
+            >
+
+              <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                {user.name.charAt(0)}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  {user.name}
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  {user.status}
+                </p>
+              </div>
+
+            </button>
+
+        ))}
+
+      </div>
     </div>
   </div>
 )}
