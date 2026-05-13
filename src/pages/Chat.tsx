@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 
 const initialUsers = [
-  { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2 },
-  { name: "Dika", status: "Online", color: "bg-green-500", unread: 1 },
-  { name: "Sakti", status: "Offline", color: "bg-gray-400", unread: 0 },
-  { name: "Nanda", status: "Online", color: "bg-green-500", unread: 0 },
-  { name: "Rizky", status: "Online", color: "bg-green-500", unread: 0 },
+  { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2, favorite: false },
+  { name: "Dika", status: "Online", color: "bg-green-500", unread: 1, favorite: false },
+  { name: "Sakti", status: "Offline", color: "bg-gray-400", unread: 0, favorite: false },
+  { name: "Nanda", status: "Online", color: "bg-green-500", unread: 0, favorite: false },
+  { name: "Rizky", status: "Online", color: "bg-green-500", unread: 0, favorite: false },
 ];
 
 type RoomType = "private" | "group" | "announcement";
@@ -48,6 +48,7 @@ export default function Chat() {
   const [showNewFilterModal, setShowNewFilterModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showEmptyScreen, setShowEmptyScreen] = useState(false);
   const [newFilterName, setNewFilterName] = useState("");
   const [customFilters, setCustomFilters] = useState<string[]>([]);
   const [filterItems, setFilterItems] = useState<Record<string, string[]>>({});
@@ -110,6 +111,20 @@ export default function Chat() {
   useEffect(() => {
     localStorage.setItem("chat-messages", JSON.stringify(messages));
   }, [messages]);
+  useEffect(() => {
+  const handleEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setShowEmptyScreen(true);
+      setMobileView("chat");
+    }
+  };
+
+  window.addEventListener("keydown", handleEsc);
+
+  return () => {
+    window.removeEventListener("keydown", handleEsc);
+  };
+}, []);
 
   const currentRoomId =
   activeRoom === "private"
@@ -125,9 +140,12 @@ export default function Chat() {
   const isCustomFilter = !defaultFilters.includes(chatFilter);
   const activeFilterKey = chatFilter;
   const filteredGroups = groups.filter((group) => {
+  if (isCustomFilter) return false;
+
   if (chatFilter === "groups") return true;
   if (chatFilter === "unread") return group.unread > 0;
   if (chatFilter === "favorites") return group.favorite;
+
   return true;
 });
 
@@ -146,7 +164,7 @@ const filteredUsers = chatUsers.filter((user) => {
 
   if (chatFilter === "groups") return false;
   if (chatFilter === "unread") return user.unread > 0;
-  if (chatFilter === "favorites") return false;
+  if (chatFilter === "favorites") return user.favorite === true;
 
   return true;
 });
@@ -194,6 +212,7 @@ const createGroup = () => {
   setShowNewGroupModal(false);
   setActiveRoom("group");
   setMobileView("chat");
+  setShowEmptyScreen(false);
 };
 
 const createCustomFilter = () => {
@@ -213,6 +232,18 @@ const addChatToFilter = (filterName: string, userName: string) => {
       ? prev[filterName]
       : [...(prev[filterName] || []), userName],
   }));
+};
+
+const addChatToFavorites = () => {
+  if (activeRoom !== "private") return;
+
+  setChatUsers((prev) =>
+    prev.map((user) =>
+      user.name === selectedUser.name
+        ? { ...user, favorite: true }
+        : user
+    )
+  );
 };
 
   const selectedGroup = groups.find(
@@ -314,6 +345,7 @@ const addChatToFilter = (filterName: string, userName: string) => {
                 onClick={() => {
                 setActiveRoom("announcement");
                 setMobileView("chat");
+                setShowEmptyScreen(false);
               }}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
                   activeRoom === "announcement"
@@ -359,6 +391,7 @@ const addChatToFilter = (filterName: string, userName: string) => {
       setActiveRoom("group");
       setSelectedGroupId(group.id);
       setMobileView("chat");
+      setShowEmptyScreen(false);
     }}
     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
       activeRoom === "group" &&
@@ -399,6 +432,7 @@ const addChatToFilter = (filterName: string, userName: string) => {
                     setSelectedUser({ ...user, unread: 0 });
                     setActiveRoom("private");
                     setMobileView("chat");
+                    setShowEmptyScreen(false);
 
                     setChatUsers((prev) =>
                       prev.map((item) =>
@@ -513,6 +547,15 @@ const addChatToFilter = (filterName: string, userName: string) => {
       <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
         Add to Filter
       </p>
+      <button
+  onClick={() => {
+    addChatToFavorites();
+    setShowChatMenu(false);
+  }}
+  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 font-medium text-[#001E8A]"
+>
+  Favorites
+</button>
 
       {customFilters.length === 0 ? (
         <p className="px-4 py-2 text-sm text-gray-500">
@@ -540,84 +583,123 @@ const addChatToFilter = (filterName: string, userName: string) => {
 </div>
 </div>
 
-  {/* Messages */}
-  <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
+{showEmptyScreen ? (
+  <div className="flex-1 flex items-center justify-center bg-[#f8fafc] px-6">
+    <div className="w-full max-w-xl bg-white border border-gray-100 rounded-[32px] shadow-sm p-8">
+      <p className="text-sm font-semibold text-[#001E8A] mb-2">
+        Workspace
+      </p>
 
-    <div className="space-y-5">
+      <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+        Hubungi Kontak Internal anda
+        <br />
+        atau lanjutkan pekerjaan
+      </h1>
 
-      <div className="flex items-center gap-4">
-        <div className="h-px bg-gray-100 flex-1" />
+      <p className="text-gray-500 mt-3 leading-relaxed">
+        Kelola komunikasi internal perusahaan, cek ringkasan pekerjaan,
+        dan lanjutkan aktivitas harian anda.
+      </p>
 
-        <span className="text-xs text-gray-400">
-          Hari ini
-        </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <button className="rounded-2xl border border-gray-200 p-5 text-left hover:bg-gray-50 transition">
+          <p className="text-sm font-semibold text-gray-900">
+            To Do Lists
+          </p>
 
-        <div className="h-px bg-gray-100 flex-1" />
+          <p className="text-xs text-gray-500 mt-1">
+            Lanjutkan pekerjaan dan checklist harian
+          </p>
+        </button>
+
+        <button className="rounded-2xl border border-gray-200 p-5 text-left hover:bg-gray-50 transition">
+          <p className="text-sm font-semibold text-gray-900">
+            Ringkasan Laporan Harian
+          </p>
+
+          <p className="text-xs text-gray-500 mt-1">
+            3 pekerjaan sedang berjalan
+          </p>
+        </button>
       </div>
-
-      {visibleMessages.map((msg) => {
-        const isMe = msg.sender === "me";
-
-        return (
-          <div
-            key={msg.id}
-            className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
-                isMe
-                  ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
-                  : "bg-gray-100 text-gray-800 rounded-[24px] rounded-bl-md"
-              }`}
-            >
-              <p className="leading-relaxed">
-                {msg.text}
-              </p>
-
-              <div
-                className={`mt-2 flex items-center justify-end gap-1 text-[10px] ${
-                  isMe ? "text-blue-100" : "text-gray-400"
-                }`}
-              >
-                <span>{msg.time}</span>
-
-                {isMe && <span>✓✓</span>}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
     </div>
   </div>
+) : (
+  <>
+    {/* Messages */}
+    <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <div className="h-px bg-gray-100 flex-1" />
 
-  {/* Input */}
-  <div className="px-5 py-4 border-t border-gray-100 bg-white">
+          <span className="text-xs text-gray-400">
+            Hari ini
+          </span>
 
-    <div className="flex items-center gap-3">
-
-      <input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            sendMessage();
-          }
-        }}
-        placeholder="Tulis pesan..."
-        className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-[#001E8A]"
-      />
-
-      <button
-        onClick={sendMessage}
-        className="w-14 h-14 rounded-2xl bg-[#001E8A] text-white flex items-center justify-center hover:bg-[#00166b]"
-      >
-        <Send className="w-5 h-5" />
-      </button>
-
-                        </div>
-          </div>
+          <div className="h-px bg-gray-100 flex-1" />
         </div>
+
+        {visibleMessages.map((msg) => {
+          const isMe = msg.sender === "me";
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
+                  isMe
+                    ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
+                    : "bg-gray-100 text-gray-800 rounded-[24px] rounded-bl-md"
+                }`}
+              >
+                <p className="leading-relaxed">
+                  {msg.text}
+                </p>
+
+                <div
+                  className={`mt-2 flex items-center justify-end gap-1 text-[10px] ${
+                    isMe ? "text-blue-100" : "text-gray-400"
+                  }`}
+                >
+                  <span>{msg.time}</span>
+
+                  {isMe && <span>✓✓</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Input */}
+    <div className="px-5 py-4 border-t border-gray-100 bg-white">
+      <div className="flex items-center gap-3">
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              sendMessage();
+            }
+          }}
+          placeholder="Tulis pesan..."
+          className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-[#001E8A]"
+        />
+
+        <button
+          onClick={sendMessage}
+          className="w-14 h-14 rounded-2xl bg-[#001E8A] text-white flex items-center justify-center hover:bg-[#00166b]"
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  </>
+)}
+</div>
 
 {showNewGroupModal && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -756,6 +838,7 @@ const addChatToFilter = (filterName: string, userName: string) => {
                 setSelectedUser(user);
                 setActiveRoom("private");
                 setMobileView("chat");
+                setShowEmptyScreen(false);
                 setShowContactsModal(false);
               }}
               className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-left"
