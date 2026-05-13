@@ -221,7 +221,7 @@ const createCustomFilter = () => {
 
   return (
     <div className="p-6 h-[calc(100vh-80px)] bg-gray-50">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-5 h-full">
         {/* Sidebar */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100">
