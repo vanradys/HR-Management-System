@@ -318,7 +318,10 @@ const addChatToFavorites = () => {
               
               <button
                 key={tab.key}
-                onClick={() => setChatFilter(tab.key as any)}
+                onClick={() => {
+                  setShowChatMenu(false);
+                  setChatFilter(tab.key as any);
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap border ${
                   chatFilter === tab.key
                     ? "bg-[#001E8A] text-white border-[#001E8A]"
@@ -343,6 +346,7 @@ const addChatToFavorites = () => {
             {chatFilter === "all" && (
               <button
                 onClick={() => {
+                setShowChatMenu(false);
                 setActiveRoom("announcement");
                 setMobileView("chat");
                 setShowEmptyScreen(false);
@@ -367,7 +371,10 @@ const addChatToFavorites = () => {
             )}
 
             <button
-  onClick={() => setShowContactsModal(true)}
+  onClick={() => {
+    setShowChatMenu(false);
+    setShowContactsModal(true);
+  }}
   className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
 >
   <Users className="w-5 h-5 text-[#001E8A]" />
@@ -388,6 +395,7 @@ const addChatToFavorites = () => {
   <button
     key={group.id}
     onClick={() => {
+      setShowChatMenu(false);
       setActiveRoom("group");
       setSelectedGroupId(group.id);
       setMobileView("chat");
@@ -429,6 +437,7 @@ const addChatToFavorites = () => {
                 <button
                   key={index}
                   onClick={() => {
+                    setShowChatMenu(false);
                     setSelectedUser({ ...user, unread: 0 });
                     setActiveRoom("private");
                     setMobileView("chat");
@@ -736,6 +745,7 @@ const addChatToFavorites = () => {
             <button
               key={user.name}
               onClick={() => {
+                setShowChatMenu(false);
                 setSelectedMembers((prev) =>
                   checked
                     ? prev.filter((name) => name !== user.name)
@@ -827,6 +837,7 @@ const addChatToFavorites = () => {
             <button
               key={user.name}
               onClick={() => {
+                setShowChatMenu(false);
 
                 if (!activeChatNames.includes(user.name)) {
                   setActiveChatNames((prev) => [
@@ -887,6 +898,7 @@ const addChatToFavorites = () => {
 
         <button
           onClick={() => {
+            setShowChatMenu(false);
             setShowNewFilterModal(false);
             setNewFilterName("");
           }}
