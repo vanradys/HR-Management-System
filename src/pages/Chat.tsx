@@ -257,7 +257,7 @@ const createCustomFilter = () => {
             </button>
 
             <button
-              onClick={() => setActiveRoom("group")}
+              onClick={() => setShowNewGroupModal(true)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
                 activeRoom === "group" ? "bg-blue-50" : "hover:bg-gray-50"
               }`}
@@ -266,15 +266,46 @@ const createCustomFilter = () => {
 
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  Group Divisi
+                  Grup Baru
                 </p>
                 <p className="text-xs text-gray-500">
-                  Engineering, Production, Accounting
+                  Buat grup baru
                 </p>
               </div>
             </button>
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
+            {groups.map((group) => (
+  <button
+    key={group.id}
+    onClick={() => setActiveRoom("group")}
+    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+      activeRoom === "group"
+        ? "bg-blue-50"
+        : "hover:bg-gray-50"
+    }`}
+  >
+    <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+      👥
+    </div>
+
+    <div className="flex-1">
+      <p className="text-sm font-semibold text-gray-900">
+        {group.name}
+      </p>
+
+      <p className="text-xs text-gray-500">
+        {group.members.length} anggota
+      </p>
+    </div>
+
+    {group.unread > 0 && (
+      <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+        {group.unread}
+      </div>
+    )}
+  </button>
+))}
               {chatUsers
                  .filter((user) =>
                   user.name.toLowerCase().includes(searchUser.toLowerCase())
@@ -439,6 +470,88 @@ const createCustomFilter = () => {
                         </div>
           </div>
         </div>
+
+{showNewGroupModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+      <div className="flex items-center gap-3 mb-5">
+        <button
+          onClick={() => setShowNewGroupModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <h2 className="text-lg font-bold text-gray-900">
+          Grup Baru
+        </h2>
+      </div>
+
+      <input
+        value={newGroupName}
+        onChange={(e) => setNewGroupName(e.target.value)}
+        placeholder="Nama grup"
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#001E8A] mb-4"
+      />
+
+      <p className="text-sm font-semibold text-gray-700 mb-2">
+        Pilih anggota
+      </p>
+
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {chatUsers.map((user) => {
+          const checked = selectedMembers.includes(user.name);
+
+          return (
+            <button
+              key={user.name}
+              onClick={() => {
+                setSelectedMembers((prev) =>
+                  checked
+                    ? prev.filter((name) => name !== user.name)
+                    : [...prev, user.name]
+                );
+              }}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left border ${
+                checked
+                  ? "border-[#001E8A] bg-blue-50"
+                  : "border-gray-100 hover:bg-gray-50"
+              }`}
+            >
+              <div className="w-9 h-9 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                {user.name.charAt(0)}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  {user.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user.status}
+                </p>
+              </div>
+
+              <div
+                className={`w-5 h-5 rounded-full border ${
+                  checked
+                    ? "bg-[#001E8A] border-[#001E8A]"
+                    : "border-gray-300"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={createGroup}
+        className="w-full mt-5 py-3 rounded-xl bg-[#001E8A] text-white font-semibold hover:bg-[#00166b]"
+      >
+        Buat Grup
+      </button>
+    </div>
+  </div>
+)}
 
 {showNewFilterModal && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
