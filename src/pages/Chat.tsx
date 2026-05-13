@@ -112,6 +112,26 @@ export default function Chat() {
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId
   );
+  const filteredGroups = groups.filter((group) => {
+  if (chatFilter === "groups") return true;
+  if (chatFilter === "unread") return group.unread > 0;
+  if (chatFilter === "favorites") return group.favorite;
+  return true;
+});
+
+const filteredUsers = chatUsers.filter((user) => {
+  const matchSearch = user.name
+    .toLowerCase()
+    .includes(searchUser.toLowerCase());
+
+  if (!matchSearch) return false;
+
+  if (chatFilter === "groups") return false;
+  if (chatFilter === "unread") return user.unread > 0;
+  if (chatFilter === "favorites") return false;
+
+  return true;
+});
 
 const sendMessage = () => {
   if (!message.trim()) return;
@@ -267,9 +287,7 @@ const createCustomFilter = () => {
 
             <button
               onClick={() => setShowNewGroupModal(true)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                activeRoom === "group" ? "bg-blue-50" : "hover:bg-gray-50"
-              }`}
+              className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
             >
               <Users className="w-5 h-5 text-blue-500" />
 
@@ -284,7 +302,7 @@ const createCustomFilter = () => {
             </button>
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
-            {groups.map((group) => (
+            {filteredGroups.map((group) => (
   <button
     key={group.id}
     onClick={() => {
@@ -319,56 +337,56 @@ const createCustomFilter = () => {
     )}
   </button>
 ))}
-              {chatUsers
-                 .filter((user) =>
-                  user.name.toLowerCase().includes(searchUser.toLowerCase())
-                )
-                .map((user, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSelectedUser({ ...user, unread: 0 });
-                      setActiveRoom("private");
+              {chatFilter !== "groups" && (
+  <>
+              {filteredUsers.map((user, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setSelectedUser({ ...user, unread: 0 });
+                    setActiveRoom("private");
 
-                      setChatUsers((prev) =>
-                        prev.map((item) =>
-                          item.name === user.name
-                            ? { ...item, unread: 0 }
-                            : item
-                        )
-                      );
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                      activeRoom === "private" &&
-                      selectedUser.name === user.name
-                        ? "bg-blue-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
-                      {user.name.charAt(0)}
+                    setChatUsers((prev) =>
+                      prev.map((item) =>
+                        item.name === user.name
+                          ? { ...item, unread: 0 }
+                          : item
+                      )
+                    );
+                  }}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+                    activeRoom === "private" &&
+                    selectedUser.name === user.name
+                      ? "bg-blue-50"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                    {user.name.charAt(0)}
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.name}
+                    </p>
+
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span
+                        className={`w-2 h-2 rounded-full ${user.color}`}
+                      />
+                      <p className="text-xs text-gray-500">{user.status}</p>
                     </div>
+                  </div>
 
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {user.name}
-                      </p>
-
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span
-                          className={`w-2 h-2 rounded-full ${user.color}`}
-                        />
-                        <p className="text-xs text-gray-500">{user.status}</p>
-                      </div>
+                  {user.unread > 0 && (
+                    <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                      {user.unread}
                     </div>
-
-                    {user.unread > 0 && (
-                      <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                        {user.unread}
-                      </div>
-                    )}
-                  </button>
-                ))}
+                  )}
+                </button>
+              ))}
+            </>
+          )}
             </div>
           </div>
         </div>
