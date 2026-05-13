@@ -36,6 +36,7 @@ type ChatGroup = {
 
 export default function Chat() {
   const [message, setMessage] = useState("");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [searchUser, setSearchUser] = useState("");
   const [activeRoom, setActiveRoom] = useState<RoomType>("private");
   const [selectedGroupId, setSelectedGroupId] = useState("group");
@@ -181,6 +182,7 @@ const createGroup = () => {
   setSelectedMembers([]);
   setShowNewGroupModal(false);
   setActiveRoom("group");
+  setMobileView("chat");
 };
 
 const createCustomFilter = () => {
@@ -223,7 +225,13 @@ const createCustomFilter = () => {
     <div className="p-6 h-[calc(100vh-80px)] bg-gray-50">
       <div className="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-5 h-full">
         {/* Sidebar */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div
+          className={`bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden ${
+            mobileView === "chat"
+              ? "hidden md:block"
+              : "block"
+          }`}
+        >
           <div className="p-4 border-b border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">Chat</h1>
             <p className="text-sm text-gray-500">
@@ -364,6 +372,7 @@ const createCustomFilter = () => {
                   onClick={() => {
                     setSelectedUser({ ...user, unread: 0 });
                     setActiveRoom("private");
+                    setMobileView("chat");
 
                     setChatUsers((prev) =>
                       prev.map((item) =>
@@ -424,7 +433,13 @@ const createCustomFilter = () => {
         </div>
 
         {/* Chat Area */}
-<div className="lg:col-span-3 bg-white border border-gray-100 rounded-[28px] shadow-sm flex flex-col overflow-hidden">
+<div
+  className={`bg-white border border-gray-100 rounded-[28px] shadow-sm flex flex-col overflow-hidden ${
+    mobileView === "list"
+      ? "hidden md:flex"
+      : "flex"
+  }`}
+>
 
   {/* Header */}
   <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
@@ -670,6 +685,7 @@ const createCustomFilter = () => {
 
                 setSelectedUser(user);
                 setActiveRoom("private");
+                setMobileView("chat");
                 setShowContactsModal(false);
               }}
               className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-left"
