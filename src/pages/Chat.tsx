@@ -47,8 +47,10 @@ export default function Chat() {
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showNewFilterModal, setShowNewFilterModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
+  const [showChatMenu, setShowChatMenu] = useState(false);
   const [newFilterName, setNewFilterName] = useState("");
   const [customFilters, setCustomFilters] = useState<string[]>([]);
+  const [filterItems, setFilterItems] = useState<Record<string, string[]>>({});
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [groups, setGroups] = useState<ChatGroup[]>([
@@ -119,6 +121,9 @@ export default function Chat() {
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId
   );
+  const defaultFilters = ["all", "unread", "favorites", "groups"];
+  const isCustomFilter = !defaultFilters.includes(chatFilter);
+  const activeFilterKey = chatFilter;
   const filteredGroups = groups.filter((group) => {
   if (chatFilter === "groups") return true;
   if (chatFilter === "unread") return group.unread > 0;
@@ -132,6 +137,11 @@ const filteredUsers = chatUsers.filter((user) => {
     .includes(searchUser.toLowerCase());
 
   if (!matchSearch) return false;
+  if (isCustomFilter) {
+  return (
+    filterItems[activeFilterKey]?.includes(user.name) || false
+  );
+}
   if (!activeChatNames.includes(user.name)) return false;
 
   if (chatFilter === "groups") return false;
@@ -194,6 +204,17 @@ const createCustomFilter = () => {
   setShowNewFilterModal(false);
 };
 
+const addChatToFilter = (filterName: string, userName: string) => {
+  if (!userName) return;
+
+  setFilterItems((prev) => ({
+    ...prev,
+    [filterName]: prev[filterName]?.includes(userName)
+      ? prev[filterName]
+      : [...(prev[filterName] || []), userName],
+  }));
+};
+
   const selectedGroup = groups.find(
     (group) => group.id === selectedGroupId
   );
@@ -251,7 +272,7 @@ const createCustomFilter = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 mt-5 overflow-x-auto pb-3 px-1">
 
             {[
               { key: "all", label: "All" },
@@ -287,10 +308,13 @@ const createCustomFilter = () => {
 
           </div>
 
-          <div className="p-3 space-y-2">
+          <div className="p-3 pt-5 space-y-2">
             {chatFilter === "all" && (
               <button
-                onClick={() => setActiveRoom("announcement")}
+                onClick={() => {
+                setActiveRoom("announcement");
+                setMobileView("chat");
+              }}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
                   activeRoom === "announcement"
                     ? "bg-red-50"
@@ -334,6 +358,7 @@ const createCustomFilter = () => {
     onClick={() => {
       setActiveRoom("group");
       setSelectedGroupId(group.id);
+      setMobileView("chat");
     }}
     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
       activeRoom === "group" &&
@@ -446,12 +471,7 @@ const createCustomFilter = () => {
   <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
 
     <div className="flex items-center gap-3">
-      <button
-      onClick={() => setMobileView("list")}
-      className="md:hidden w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
-    >
-      <ArrowLeft className="w-6 h-6 text-gray-700" />
-    </button>
+  
       <button
       onClick={() => setMobileView("list")}
       className="md:hidden w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
@@ -480,8 +500,45 @@ const createCustomFilter = () => {
       </div>
     </div>
 
+    <div className="relative">
+  <button
+    onClick={() => setShowChatMenu((prev) => !prev)}
+    className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+  >
     <MoreVertical className="w-5 h-5 text-gray-400" />
-  </div>
+  </button>
+
+  {showChatMenu && (
+    <div className="absolute right-0 top-11 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
+      <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
+        Add to Filter
+      </p>
+
+      {customFilters.length === 0 ? (
+        <p className="px-4 py-2 text-sm text-gray-500">
+          Belum ada filter
+        </p>
+      ) : (
+        customFilters.map((filter) => (
+          <button
+            key={filter}
+            onClick={() => {
+              if (activeRoom === "private") {
+                addChatToFilter(filter, selectedUser?.name || "");
+              }
+
+              setShowChatMenu(false);
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+          >
+            {filter}
+          </button>
+        ))
+      )}
+    </div>
+  )}
+</div>
+</div>
 
   {/* Messages */}
   <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
