@@ -38,6 +38,7 @@ export default function Chat() {
   const [message, setMessage] = useState("");
   const [searchUser, setSearchUser] = useState("");
   const [activeRoom, setActiveRoom] = useState<RoomType>("private");
+  const [selectedGroupId, setSelectedGroupId] = useState("group");
   const [chatFilter, setChatFilter] = useState<
   "all" | "unread" | "favorites" | "groups"
   >("all");
@@ -102,7 +103,11 @@ export default function Chat() {
   }, [messages]);
 
   const currentRoomId =
-    activeRoom === "private" ? selectedUser.name : activeRoom;
+  activeRoom === "private"
+    ? selectedUser.name
+    : activeRoom === "group"
+    ? selectedGroupId
+    : activeRoom;
 
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId
@@ -152,18 +157,22 @@ const createCustomFilter = () => {
   setShowNewFilterModal(false);
 };
 
+  const selectedGroup = groups.find(
+    (group) => group.id === selectedGroupId
+  );
+
   const headerTitle =
     activeRoom === "announcement"
       ? "Announcement"
       : activeRoom === "group"
-      ? "Group Divisi"
+      ? selectedGroup?.name || "Group"
       : selectedUser.name;
 
   const headerSubtitle =
     activeRoom === "announcement"
       ? "Pengumuman perusahaan"
       : activeRoom === "group"
-      ? "Engineering, Production, Accounting"
+      ? selectedGroup?.members.join(", ") || "Anggota grup"
       : selectedUser.status;
 
   const headerAvatar =
@@ -278,9 +287,13 @@ const createCustomFilter = () => {
             {groups.map((group) => (
   <button
     key={group.id}
-    onClick={() => setActiveRoom("group")}
+    onClick={() => {
+      setActiveRoom("group");
+      setSelectedGroupId(group.id);
+    }}
     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-      activeRoom === "group"
+      activeRoom === "group" &&
+      selectedGroupId === group.id
         ? "bg-blue-50"
         : "hover:bg-gray-50"
     }`}
@@ -545,10 +558,20 @@ const createCustomFilter = () => {
 
       <button
         onClick={createGroup}
-        className="w-full mt-5 py-3 rounded-xl bg-[#001E8A] text-white font-semibold hover:bg-[#00166b]"
+        disabled={
+          !newGroupName.trim() ||
+          selectedMembers.length < 2
+        }
+        className={`w-full mt-5 py-3 rounded-xl text-white font-semibold transition ${
+          !newGroupName.trim() ||
+          selectedMembers.length < 2
+            ? "bg-[#001E8A]/40 cursor-not-allowed"
+            : "bg-[#001E8A] hover:bg-[#00166b]"
+        }`}
       >
         Buat Grup
       </button>
+
     </div>
   </div>
 )}
