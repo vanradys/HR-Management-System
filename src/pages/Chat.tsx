@@ -5,7 +5,6 @@ import {
   Megaphone,
   Users,
   MoreVertical,
-  Plus,
   X,
   ArrowLeft,
 } from "lucide-react";
@@ -45,13 +44,9 @@ export default function Chat() {
   "all" | "unread" | "favorites" | "groups"
   >("all");
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
-  const [showNewFilterModal, setShowNewFilterModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [showEmptyScreen, setShowEmptyScreen] = useState(false);
-  const [newFilterName, setNewFilterName] = useState("");
-  const [customFilters, setCustomFilters] = useState<string[]>([]);
-  const [filterItems, setFilterItems] = useState<Record<string, string[]>>({});
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [groups, setGroups] = useState<ChatGroup[]>(() => {
@@ -114,43 +109,20 @@ const [activeChatNames, setActiveChatNames] = useState<string[]>([
 
   useEffect(() => {
   const savedMessages = localStorage.getItem("chat-messages");
-  const savedCustomFilters = localStorage.getItem("chat-custom-filters");
-  const savedFilterItems = localStorage.getItem("chat-filter-items");
   const savedActiveUsers = localStorage.getItem("chat-active-users");
 
   if (savedMessages) {
     setMessages(JSON.parse(savedMessages));
   }
 
-  if (savedCustomFilters) {
-    setCustomFilters(JSON.parse(savedCustomFilters));
-  }
 
-  if (savedFilterItems) {
-    setFilterItems(JSON.parse(savedFilterItems));
-  }
 
   if (savedActiveUsers) {
     setActiveChatNames(JSON.parse(savedActiveUsers));
   }
 }, []);
 
-  useEffect(() => {
-    localStorage.setItem("chat-messages", JSON.stringify(messages));
-  }, [messages]);
-  useEffect(() => {
-  localStorage.setItem(
-    "chat-custom-filters",
-    JSON.stringify(customFilters)
-  );
-}, [customFilters]);
 
-useEffect(() => {
-  localStorage.setItem(
-    "chat-filter-items",
-    JSON.stringify(filterItems)
-  );
-}, [filterItems]);
 
 useEffect(() => {
   localStorage.setItem(
@@ -197,12 +169,8 @@ useEffect(() => {
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId
   );
-  const defaultFilters = ["all", "unread", "favorites", "groups"];
-  const isCustomFilter = !defaultFilters.includes(chatFilter);
-  const activeFilterKey = chatFilter;
-  const filteredGroups = groups.filter((group) => {
-  if (isCustomFilter) return false;
 
+  const filteredGroups = groups.filter((group) => {
   if (chatFilter === "groups") return true;
   if (chatFilter === "unread") return group.unread > 0;
   if (chatFilter === "favorites") return group.favorite;
@@ -216,11 +184,7 @@ const filteredUsers = chatUsers.filter((user) => {
     .includes(searchUser.toLowerCase());
 
   if (!matchSearch) return false;
-  if (isCustomFilter) {
-  return (
-    filterItems[activeFilterKey]?.includes(user.name) || false
-  );
-}
+  
   if (!activeChatNames.includes(user.name)) return false;
 
   if (chatFilter === "groups") return false;
@@ -277,24 +241,7 @@ const createGroup = () => {
   setShowEmptyScreen(false);
 };
 
-const createCustomFilter = () => {
-  if (!newFilterName.trim()) return;
 
-  setCustomFilters((prev) => [...prev, newFilterName.trim()]);
-  setNewFilterName("");
-  setShowNewFilterModal(false);
-};
-
-const addChatToFilter = (filterName: string, userName: string) => {
-  if (!userName) return;
-
-  setFilterItems((prev) => ({
-    ...prev,
-    [filterName]: prev[filterName]?.includes(userName)
-      ? prev[filterName]
-      : [...(prev[filterName] || []), userName],
-  }));
-};
 
 const addChatToFavorites = () => {
   if (activeRoom !== "private") return;
@@ -346,6 +293,7 @@ const addChatToFavorites = () => {
               ? "hidden md:block"
               : "block"
           }`}
+  
         >
           <div className="p-4 border-b border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">Chat</h1>
@@ -372,10 +320,7 @@ const addChatToFavorites = () => {
               { key: "unread", label: "Unread" },
               { key: "favorites", label: "Favorites" },
               { key: "groups", label: "Groups" },
-              ...customFilters.map((filter) => ({
-                key: filter.toLowerCase().replace(/\s+/g, "-"),
-                label: filter,
-              })),
+              
             ].map((tab) => (
               
               <button
@@ -395,14 +340,9 @@ const addChatToFavorites = () => {
 
             ))}
 
-            <button
-              onClick={() => setShowNewFilterModal(true)}
-              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-
+         
           </div>
+
 
           <div className="p-3 pt-5 space-y-2">
             {chatFilter === "all" && (
@@ -638,42 +578,46 @@ const addChatToFavorites = () => {
   </button>
 
   {showChatMenu && (
-    <div className="absolute right-0 top-11 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
-      <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
-        Add to Filter
-      </p>
+    <>
       <button
-  onClick={() => {
-    addChatToFavorites();
-    setShowChatMenu(false);
-  }}
-  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 font-medium text-[#001E8A]"
->
-  Favorites
-</button>
+        type="button"
+        onClick={() => setShowChatMenu(false)}
+        className="fixed inset-0 z-40 cursor-default"
+        aria-label="Close chat menu"
+      />
 
-      {customFilters.length === 0 ? (
-        <p className="px-4 py-2 text-sm text-gray-500">
-          Belum ada filter
+      <div className="absolute right-0 top-11 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
+
+        <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
+          Chat Options
         </p>
-      ) : (
-        customFilters.map((filter) => (
-          <button
-            key={filter}
-            onClick={() => {
-              if (activeRoom === "private") {
-                addChatToFilter(filter, selectedUser?.name || "");
-              }
 
-              setShowChatMenu(false);
-            }}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-          >
-            {filter}
-          </button>
-        ))
-      )}
-    </div>
+        <button
+          onClick={() => {
+            if (activeRoom === "private") {
+              setChatUsers((prev) =>
+                prev.map((user) =>
+                  user.name === selectedUser.name
+                    ? {
+                        ...user,
+                        favorite: !user.favorite,
+                      }
+                    : user
+                )
+              );
+            }
+
+            setShowChatMenu(false);
+          }}
+          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+        >
+          {selectedUser.favorite
+            ? "Remove from Favorites"
+            : "Add to Favorites"}
+        </button>
+
+      </div>
+    </>
   )}
 </div>
 </div>
@@ -896,6 +840,7 @@ const addChatToFavorites = () => {
       <div className="flex items-center justify-between mb-5">
 
         <div>
+          
           <h2 className="text-lg font-bold text-gray-900">
             Kontak Internal
           </h2>
@@ -963,50 +908,7 @@ const addChatToFavorites = () => {
     </div>
   </div>
 )}
-
-{showNewFilterModal && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-    <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-5">
-
-      <h2 className="text-lg font-bold text-gray-900 mb-4">
-        Add New Filter
-      </h2>
-
-      <input
-        value={newFilterName}
-        onChange={(e) => setNewFilterName(e.target.value)}
-        placeholder="Nama filter"
-        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#001E8A]"
-      />
-
-      <div className="flex items-center justify-end gap-3 mt-5">
-
-        <button
-          onClick={() => {
-            setShowChatMenu(false);
-            setShowNewFilterModal(false);
-            setNewFilterName("");
-          }}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={createCustomFilter}
-          className="px-5 py-2 rounded-xl bg-[#001E8A] text-white hover:bg-[#00166b]"
-        >
-          Save
-        </button>
-
-      </div>
     </div>
   </div>
-)}
-
-
-      </div>
-    </div>
   );
 }
