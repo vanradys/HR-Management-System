@@ -133,6 +133,14 @@ const filteredUsers = chatUsers.filter((user) => {
   return true;
 });
 
+const getLastMessage = (roomId: string) => {
+  const roomMessages = messages.filter(
+    (msg) => msg.roomId === roomId
+  );
+
+  return roomMessages[roomMessages.length - 1];
+};
+
 const sendMessage = () => {
   if (!message.trim()) return;
 
@@ -265,41 +273,45 @@ const createCustomFilter = () => {
           </div>
 
           <div className="p-3 space-y-2">
-            <button
-              onClick={() => setActiveRoom("announcement")}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                activeRoom === "announcement"
-                  ? "bg-red-50"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              <Megaphone className="w-5 h-5 text-red-500" />
+            {chatFilter === "all" && (
+              <button
+                onClick={() => setActiveRoom("announcement")}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+                  activeRoom === "announcement"
+                    ? "bg-red-50"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <Megaphone className="w-5 h-5 text-red-500" />
 
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  Announcement
-                </p>
-                <p className="text-xs text-gray-500">
-                  Pengumuman perusahaan
-                </p>
-              </div>
-            </button>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Announcement
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Pengumuman perusahaan
+                  </p>
+                </div>
+              </button>
+            )}
 
-            <button
-              onClick={() => setShowNewGroupModal(true)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
-            >
-              <Users className="w-5 h-5 text-blue-500" />
+            {chatFilter === "all" && (
+              <button
+                onClick={() => setShowNewGroupModal(true)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+              >
+                <Users className="w-5 h-5 text-blue-500" />
 
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  Grup Baru
-                </p>
-                <p className="text-xs text-gray-500">
-                  Buat grup baru
-                </p>
-              </div>
-            </button>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Grup Baru
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Buat grup baru
+                  </p>
+                </div>
+              </button>
+            )}
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
             {filteredGroups.map((group) => (
@@ -339,7 +351,9 @@ const createCustomFilter = () => {
 ))}
               {chatFilter !== "groups" && (
   <>
-              {filteredUsers.map((user, index) => (
+              {filteredUsers.map((user, index) => {
+  const lastMessage = getLastMessage(user.name);
+  return (
                 <button
                   key={index}
                   onClick={() => {
@@ -354,6 +368,7 @@ const createCustomFilter = () => {
                       )
                     );
                   }}
+
                   className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
                     activeRoom === "private" &&
                     selectedUser.name === user.name
@@ -366,17 +381,28 @@ const createCustomFilter = () => {
                   </div>
 
                   <div className="flex-1">
+                  <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold text-gray-900">
                       {user.name}
                     </p>
-
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span
-                        className={`w-2 h-2 rounded-full ${user.color}`}
-                      />
-                      <p className="text-xs text-gray-500">{user.status}</p>
-                    </div>
+                    {lastMessage && (
+                      <p className="text-[11px] text-gray-400 whitespace-nowrap">
+                        {lastMessage.time}
+                      </p>
+                    )}
                   </div>
+
+                  <div className="flex items-center gap-1.5 mt-0.5">
+
+                    <span
+                      className={`w-2 h-2 rounded-full ${user.color}`}
+                    />
+
+                    <p className="text-xs text-gray-500 truncate max-w-[160px]">
+                      {lastMessage?.text || user.status}
+                    </p>
+                  </div>
+                </div>
 
                   {user.unread > 0 && (
                     <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
@@ -384,7 +410,8 @@ const createCustomFilter = () => {
                     </div>
                   )}
                 </button>
-              ))}
+                  );
+                })}
             </>
           )}
             </div>
@@ -633,6 +660,7 @@ const createCustomFilter = () => {
     </div>
   </div>
 )}
+
 
       </div>
     </div>
