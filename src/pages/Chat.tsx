@@ -54,17 +54,29 @@ export default function Chat() {
   const [filterItems, setFilterItems] = useState<Record<string, string[]>>({});
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [groups, setGroups] = useState<ChatGroup[]>([
-    {
-      id: "group",
-      name: "Group Divisi",
-      members: ["Hafidz", "Dika", "Sakti"],
-      unread: 0,
-      favorite: false,
-    },
-  ]);
-  const [chatUsers, setChatUsers] = useState(initialUsers);
-  const [activeChatNames, setActiveChatNames] = useState<string[]>([
+  const [groups, setGroups] = useState<ChatGroup[]>(() => {
+  const savedGroups = localStorage.getItem("chat-groups");
+
+  return savedGroups
+    ? JSON.parse(savedGroups)
+    : [
+        {
+          id: "group",
+          name: "Group Divisi",
+          members: ["Hafidz", "Dika", "Sakti"],
+          unread: 0,
+          favorite: false,
+        },
+      ];
+});
+  const [chatUsers, setChatUsers] = useState(() => {
+  const savedUsers = localStorage.getItem("chat-users");
+
+  return savedUsers
+    ? JSON.parse(savedUsers)
+    : initialUsers;
+});
+const [activeChatNames, setActiveChatNames] = useState<string[]>([
   "Hafidz",
   "Dika",
 ]);
@@ -101,16 +113,65 @@ export default function Chat() {
   ]);
 
   useEffect(() => {
-    const savedMessages = localStorage.getItem("chat-messages");
+  const savedMessages = localStorage.getItem("chat-messages");
+  const savedCustomFilters = localStorage.getItem("chat-custom-filters");
+  const savedFilterItems = localStorage.getItem("chat-filter-items");
+  const savedActiveUsers = localStorage.getItem("chat-active-users");
 
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
-  }, []);
+  if (savedMessages) {
+    setMessages(JSON.parse(savedMessages));
+  }
+
+  if (savedCustomFilters) {
+    setCustomFilters(JSON.parse(savedCustomFilters));
+  }
+
+  if (savedFilterItems) {
+    setFilterItems(JSON.parse(savedFilterItems));
+  }
+
+  if (savedActiveUsers) {
+    setActiveChatNames(JSON.parse(savedActiveUsers));
+  }
+}, []);
 
   useEffect(() => {
     localStorage.setItem("chat-messages", JSON.stringify(messages));
   }, [messages]);
+  useEffect(() => {
+  localStorage.setItem(
+    "chat-custom-filters",
+    JSON.stringify(customFilters)
+  );
+}, [customFilters]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-filter-items",
+    JSON.stringify(filterItems)
+  );
+}, [filterItems]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-active-users",
+    JSON.stringify(activeChatNames)
+  );
+}, [activeChatNames]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-users",
+    JSON.stringify(chatUsers)
+  );
+}, [chatUsers]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-groups",
+    JSON.stringify(groups)
+  );
+}, [groups]);
   useEffect(() => {
   const handleEsc = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -210,6 +271,7 @@ const createGroup = () => {
   setNewGroupName("");
   setSelectedMembers([]);
   setShowNewGroupModal(false);
+  setSelectedGroupId(newGroup.id);
   setActiveRoom("group");
   setMobileView("chat");
   setShowEmptyScreen(false);
@@ -370,25 +432,49 @@ const addChatToFavorites = () => {
               </button>
             )}
 
-            <button
-  onClick={() => {
-    setShowChatMenu(false);
-    setShowContactsModal(true);
-  }}
-  className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
->
-  <Users className="w-5 h-5 text-[#001E8A]" />
+            {chatFilter === "all" && (
+  <button
+    onClick={() => {
+      setShowChatMenu(false);
+      setShowNewGroupModal(true);
+    }}
+    className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+  >
+    <Users className="w-5 h-5 text-blue-500" />
 
-  <div>
-    <p className="text-sm font-semibold text-gray-900">
-      Kontak Internal
-    </p>
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        Grup Baru
+      </p>
 
-    <p className="text-xs text-gray-500">
-      Daftar karyawan internal
-    </p>
-  </div>
-</button>
+      <p className="text-xs text-gray-500">
+        Buat grup baru
+      </p>
+    </div>
+  </button>
+)}
+
+ {chatFilter === "all" && (
+  <button
+    onClick={() => {
+      setShowChatMenu(false);
+      setShowContactsModal(true);
+    }}
+    className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+  >
+    <Users className="w-5 h-5 text-[#001E8A]" />
+
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        Kontak Internal
+      </p>
+
+      <p className="text-xs text-gray-500">
+        Daftar karyawan internal
+      </p>
+    </div>
+  </button>
+)}
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
             {filteredGroups.map((group) => (
