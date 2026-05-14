@@ -36,7 +36,7 @@ const MENU_ITEMS: MenuItem[] = [
 const ROLES = [
   'Admin',
   'Director',
-  'HRD',
+  'HR',
   'Finance',
   'GA',
   'Marketing',
@@ -44,7 +44,6 @@ const ROLES = [
   'Production',
   'Logistic',
   'Purchasing',
-  'Karyawan',
 ] as const;
 
 type PermissionRole = typeof ROLES[number];
@@ -56,10 +55,10 @@ type PermissionRow = {
   canAccess: boolean;
 };
 
-const roleColor: Record<string, string> = {
+const roleColor: Record<PermissionRole, string> = {
   Admin: 'bg-red-100 text-red-700',
   Director: 'bg-red-100 text-red-700',
-  HRD: 'bg-blue-100 text-blue-700',
+  HR: 'bg-blue-100 text-blue-700',
   Finance: 'bg-green-100 text-green-700',
   GA: 'bg-yellow-100 text-yellow-700',
   Marketing: 'bg-pink-100 text-pink-700',
@@ -67,7 +66,6 @@ const roleColor: Record<string, string> = {
   Production: 'bg-orange-100 text-orange-700',
   Logistic: 'bg-cyan-100 text-cyan-700',
   Purchasing: 'bg-emerald-100 text-emerald-700',
-  Karyawan: 'bg-gray-100 text-gray-700',
 };
 
 export default function Pengaturan() {
@@ -289,8 +287,9 @@ export default function Pengaturan() {
 
                   <td className="px-5 py-3">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${roleColor[user.role] || 'bg-gray-100 text-gray-700'
-                        }`}
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                        roleColor[user.role as PermissionRole] || 'bg-gray-100 text-gray-700'
+                      }`}
                     >
                       {user.role}
                     </span>
@@ -299,10 +298,11 @@ export default function Pengaturan() {
                   <td className="px-5 py-3">
                     <button
                       onClick={() => handleStatusChange(user.id)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${user.status === 'Aktif'
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                        user.status === 'Aktif'
                           ? 'border-red-200 text-red-700 hover:bg-red-50'
                           : 'border-green-200 text-green-700 hover:bg-green-50'
-                        }`}
+                      }`}
                       data-testid={`button-toggle-status-${user.id}`}
                     >
                       {user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}

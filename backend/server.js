@@ -153,20 +153,61 @@ app.post("/api/permissions/toggle", async (req, res) => {
   }
 });
 
-app.get("/api/me", authMiddleware, async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-    },
-  });
+app.get("/api/permissions", async (req, res) => {
+  try {
+    const permissions = await prisma.rolePermission.findMany({
+      orderBy: [{ menu: "asc" }, { role: "asc" }],
+    });
 
-  res.json(user);
+    res.json(permissions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Gagal mengambil permissions." });
+  }
 });
+
+app.post("/api/permissions/toggle", async (req, res) => {
+  try {
+    const { menu, role } = req.body;
+
+    if (!menu || !role) {
+      return res.status(400).json({ message: "Menu dan role wajib diisi." });
+    }
+
+    if (role === "Admin" || role === "Director") {
+      return res.status(403).json({
+        message: "Admin dan Director wajib memiliki akses semua fitur.",
+      });
+    }
+
+    const existing = await prisma.rolePermission.findUnique({
+      where: {
+        menu_role: { menu, role },
+      },
+    });
+
+    const updated = await prisma.rolePermission.upsert({
+      where: {
+        menu_role: { menu, role },
+      },
+      update: {
+        canAccess: existing ? !existing.canAccess : true,
+      },
+      create: {
+        menu,
+        role,
+        canAccess: true,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Gagal mengubah permission." });
+  }
+});
+
+res.json(user);
 
 app.get("/api/employees", authMiddleware, allowRoles("Admin", "HR", "Manager"), async (req, res) => {
   const employees = await prisma.employee.findMany({

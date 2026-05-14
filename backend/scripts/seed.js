@@ -10,10 +10,9 @@ const users = [
     email: "admin@adiyasa.com",
     password: "AdiyasaFamily",
     role: "Admin",
-    department: "HRD",
+    department: "HR",
     position: "Administrator",
   },
-
   {
     employeeId: "PTAA-002",
     name: "Marketing PTAA",
@@ -23,7 +22,6 @@ const users = [
     department: "Marketing",
     position: "Marketing Staff",
   },
-
   {
     employeeId: "PTAA-003",
     name: "Finance PTAA",
@@ -33,17 +31,15 @@ const users = [
     department: "Finance",
     position: "Finance Staff",
   },
-
   {
     employeeId: "PTAA-004",
-    name: "HRD PTAA",
-    email: "hrd@adiyasa.com",
-    password: "HRDPTAA",
-    role: "HRD",
-    department: "HRD",
-    position: "HRD Staff",
+    name: "HR PTAA",
+    email: "hr@adiyasa.com",
+    password: "HRPTAA",
+    role: "HR",
+    department: "HR",
+    position: "HR Staff",
   },
-
   {
     employeeId: "PTAA-005",
     name: "Director PTAA",
@@ -53,7 +49,6 @@ const users = [
     department: "Management",
     position: "Director",
   },
-
   {
     employeeId: "PTAA-006",
     name: "GA PTAA",
@@ -63,7 +58,6 @@ const users = [
     department: "General Affairs",
     position: "GA Staff",
   },
-
   {
     employeeId: "PTAA-007",
     name: "Purchasing PTAA",
@@ -73,7 +67,6 @@ const users = [
     department: "Purchasing",
     position: "Purchasing Staff",
   },
-
   {
     employeeId: "PTAA-008",
     name: "Engineering 1 PTAA",
@@ -83,7 +76,6 @@ const users = [
     department: "Engineering",
     position: "Engineering Staff",
   },
-
   {
     employeeId: "PTAA-009",
     name: "Engineering 2 PTAA",
@@ -93,7 +85,6 @@ const users = [
     department: "Engineering",
     position: "Engineering Staff",
   },
-
   {
     employeeId: "PTAA-010",
     name: "Engineering 3 PTAA",
@@ -105,22 +96,45 @@ const users = [
   },
 ];
 
-async function main() {
+const allRoles = [
+  "Admin",
+  "Director",
+  "HR",
+  "Finance",
+  "GA",
+  "Marketing",
+  "Engineering",
+  "Production",
+  "Logistic",
+  "Purchasing",
+];
+
+const permissions = [
+  { menu: "Dashboard", roles: allRoles },
+  { menu: "Karyawan", roles: ["Admin", "Director", "HR"] },
+  { menu: "Absensi", roles: allRoles },
+  { menu: "Shift", roles: ["Admin", "Director", "HR", "Production", "Logistic"] },
+  { menu: "Cuti & Izin", roles: ["Admin", "Director", "HR", "GA"] },
+  { menu: "Lembur", roles: ["Admin", "Director", "HR", "Finance", "Engineering", "Production", "Logistic"] },
+  { menu: "Reimbursement", roles: ["Admin", "Director", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing"] },
+  { menu: "Laporan", roles: allRoles },
+  { menu: "Pengumuman", roles: allRoles },
+  { menu: "Payroll", roles: ["Admin", "Director", "Finance"] },
+  { menu: "Pengaturan", roles: ["Admin"] },
+];
+
+async function seedUsers() {
   for (const item of users) {
     const passwordHash = await bcrypt.hash(item.password, 10);
 
     const user = await prisma.user.upsert({
-      where: {
-        email: item.email,
-      },
-
+      where: { email: item.email },
       update: {
         name: item.name,
         passwordHash,
         role: item.role,
         status: "Aktif",
       },
-
       create: {
         name: item.name,
         email: item.email,
@@ -131,10 +145,7 @@ async function main() {
     });
 
     await prisma.employee.upsert({
-      where: {
-        employeeId: item.employeeId,
-      },
-
+      where: { employeeId: item.employeeId },
       update: {
         userId: user.id,
         name: item.name,
@@ -145,7 +156,6 @@ async function main() {
         joinDate: "2026-01-01",
         employmentStatus: "Aktif",
       },
-
       create: {
         userId: user.id,
         employeeId: item.employeeId,
@@ -161,27 +171,9 @@ async function main() {
 
     console.log(`User ${item.email} berhasil dibuat / diupdate.`);
   }
-
-  console.log("Semua seed data berhasil dibuat.");
 }
 
 async function seedPermissions() {
-  const permissions = [
-    { menu: "Dashboard", roles: ["Admin", "Director", "HRD", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"] },
-    { menu: "Karyawan", roles: ["Admin", "Director", "HRD"] },
-    { menu: "Absensi", roles: ["Admin", "Director", "HRD", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"] },
-    { menu: "Shift", roles: ["Admin", "Director", "HRD", "Production", "Logistic"] },
-    { menu: "Cuti & Izin", roles: ["Admin", "Director", "HRD", "GA", "Karyawan"] },
-    { menu: "Lembur", roles: ["Admin", "Director", "HRD", "Finance", "Engineering", "Production", "Logistic"] },
-    { menu: "Reimbursement", roles: ["Admin", "Director", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"] },
-    { menu: "Laporan", roles: ["Admin", "Director", "HRD", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"] },
-    { menu: "Pengumuman", roles: ["Admin", "Director", "HRD", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"] },
-    { menu: "Payroll", roles: ["Admin", "Director", "Finance", "Karyawan"] },
-    { menu: "Pengaturan", roles: ["Admin"] },
-  ];
-
-  const allRoles = ["Admin", "Director", "HRD", "Finance", "GA", "Marketing", "Engineering", "Production", "Logistic", "Purchasing", "Karyawan"];
-
   for (const item of permissions) {
     for (const role of allRoles) {
       await prisma.rolePermission.upsert({
@@ -192,19 +184,31 @@ async function seedPermissions() {
           },
         },
         update: {
-          canAccess: item.roles.includes(role) || role === "Admin" || role === "Director",
+          canAccess:
+            item.roles.includes(role) ||
+            role === "Admin" ||
+            role === "Director",
         },
         create: {
           menu: item.menu,
           role,
-          canAccess: item.roles.includes(role) || role === "Admin" || role === "Director",
+          canAccess:
+            item.roles.includes(role) ||
+            role === "Admin" ||
+            role === "Director",
         },
       });
     }
   }
-  await seedPermissions();
 
   console.log("Permission seed berhasil dibuat / diupdate.");
+}
+
+async function main() {
+  await seedUsers();
+  await seedPermissions();
+
+  console.log("Semua seed data berhasil dibuat.");
 }
 
 main()

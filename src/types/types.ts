@@ -144,15 +144,14 @@ export interface PayrollRecord {
 export type UserRole =
   | 'Admin'
   | 'Director'
-  | 'Accounting'
-  | 'Purchasing'
+  | 'HR'
+  | 'Finance'
   | 'GA'
-  | 'Supervisor'
   | 'Marketing'
   | 'Engineering'
   | 'Production'
   | 'Logistic'
-  | 'Karyawan';
+  | 'Purchasing';
 
 export interface AppUser {
   id: string;
