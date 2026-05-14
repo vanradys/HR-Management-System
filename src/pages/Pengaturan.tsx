@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Check, Minus } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { AppUser, UserRole } from '@/types/types';
-import { SEED_USERS } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -71,45 +69,140 @@ const roleColor: Record<PermissionRole, string> = {
 export default function Pengaturan() {
   const { toast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-  const [users, setUsers] = useLocalStorage<AppUser[]>('hrptaa_users', SEED_USERS);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/permissions`)
-      .then((res) => res.json())
-      .then((data) => setPermissionRows(data))
-      .catch((err) => {
+    const token = localStorage.getItem('hrptaa_token');
+
+    if (!token) {
+      toast({
+        title: 'Gagal',
+        description: 'Token tidak ditemukan. Silakan login ulang.',
+      });
+      return;
+    }
+
+    async function fetchSettings() {
+      try {
+        const [permRes, userRes] = await Promise.all([
+          fetch(`${API_URL}/api/permissions`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/api/users`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (!permRes.ok || !userRes.ok) {
+          throw new Error('Fetch settings failed');
+        }
+
+        const [permissions, usersData] = await Promise.all([
+          permRes.json(),
+          userRes.json(),
+        ]);
+
+        setPermissionRows(permissions);
+        setUsers(usersData.map((user: any) => ({
+          ...user,
+          id: String(user.id),
+        })));
+      } catch (err) {
         console.error(err);
         toast({
           title: 'Gagal',
-          description: 'Gagal mengambil data hak akses dari server.',
+          description: 'Gagal mengambil data dari server.',
         });
-      });
+      }
+    }
+
+    fetchSettings();
   }, [API_URL, toast]);
 
-  function handleRoleChange(id: string, role: UserRole) {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
+  async function handleRoleChange(id: string, role: UserRole) {
+    const token = localStorage.getItem('hrptaa_token');
 
-    toast({
-      title: 'Berhasil',
-      description: 'Role pengguna berhasil diperbarui.',
-    });
+    if (!token) {
+      toast({
+        title: 'Gagal',
+        description: 'Token tidak ditemukan. Silakan login ulang.',
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Gagal memperbarui role pengguna');
+      }
+
+      const updatedUser = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? updatedUser : u)));
+
+      toast({
+        title: 'Berhasil',
+        description: 'Role pengguna berhasil diperbarui.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Gagal',
+        description: 'Role pengguna gagal diperbarui.',
+      });
+    }
   }
 
-  function handleStatusChange(id: string) {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, status: u.status === 'Aktif' ? 'Nonaktif' : 'Aktif' }
-          : u
-      )
-    );
+  async function handleStatusChange(id: string) {
+    const token = localStorage.getItem('hrptaa_token');
+    const user = users.find((u) => u.id === id);
 
-    toast({
-      title: 'Berhasil',
-      description: 'Status pengguna berhasil diperbarui.',
-    });
+    if (!token || !user) {
+      toast({
+        title: 'Gagal',
+        description: 'Token atau pengguna tidak tersedia.',
+      });
+      return;
+    }
+
+    const nextStatus = user.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
+
+    try {
+      const res = await fetch(`${API_URL}/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Gagal memperbarui status pengguna');
+      }
+
+      const updatedUser = await res.json();
+      setUsers((prev) => prev.map((u) => (u.id === id ? updatedUser : u)));
+
+      toast({
+        title: 'Berhasil',
+        description: 'Status pengguna berhasil diperbarui.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Gagal',
+        description: 'Status pengguna gagal diperbarui.',
+      });
+    }
   }
 
   async function handlePermissionToggle(menu: MenuItem, role: PermissionRole) {
@@ -121,10 +214,23 @@ export default function Pengaturan() {
       return;
     }
 
+    const token = localStorage.getItem('hrptaa_token');
+
+    if (!token) {
+      toast({
+        title: 'Gagal',
+        description: 'Token tidak ditemukan. Silakan login ulang.',
+      });
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/permissions/toggle`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ menu, role }),
       });
 
