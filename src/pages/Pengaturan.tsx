@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, Minus } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { AppUser, UserRole } from '@/types/types';
@@ -24,6 +24,12 @@ const ROLES = [
 ] as const;
 
 type PermissionRole = typeof ROLES[number];
+type PermissionRow = {
+  id: number;
+  menu: MenuItem;
+  role: PermissionRole;
+  canAccess: boolean;
+};
 
 const DEFAULT_PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
   Dashboard: ['Director', 'Admin', 'Accounting', 'Purchasing', 'GA', 'Marketing', 'Engineering', 'Production', 'Logistic'],
@@ -42,11 +48,28 @@ const DEFAULT_PERMISSIONS: Record<MenuItem, PermissionRole[]> = {
 
 export default function Pengaturan() {
   const { toast } = useToast();
-  const [users, setUsers] = useLocalStorage<AppUser[]>('hrptaa_users', SEED_USERS);
-  const [permissions, setPermissions] = useLocalStorage<Record<MenuItem, PermissionRole[]>>(
-    'hrptaa_permissions',
-    DEFAULT_PERMISSIONS
+
+  const [users, setUsers] = useLocalStorage<AppUser[]>(
+    'hrptaa_users',
+    SEED_USERS
   );
+
+  const API_URL =
+    import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+  const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
+  useEffect(() => {
+    fetch(`${API_URL}/api/permissions`)
+      .then(res => res.json())
+      .then(data => setPermissionRows(data))
+      .catch(err => {
+        console.error(err);
+        toast({
+          title: 'Gagal',
+          description: 'Gagal mengambil data hak akses dari server.',
+        });
+      });
+  }, []);
 
   function handleRoleChange(id: string, role: UserRole) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
@@ -58,31 +81,47 @@ export default function Pengaturan() {
     toast({ title: 'Berhasil', description: 'Status pengguna berhasil diperbarui.' });
   }
 
-  function handlePermissionToggle(menu: MenuItem, role: PermissionRole) {
+  async function handlePermissionToggle(menu: MenuItem, role: PermissionRole) {
     if (role === 'Admin' || role === 'Director') {
       toast({
         title: 'Tidak bisa diubah',
-        description: 'Admin dan Director wajib memiliki akses ke semua fitur.',
+        description: 'Admin dan Director wajib memiliki akses semua fitur.',
       });
       return;
     }
 
-    setPermissions(prev => {
-      const currentRoles = prev[menu] || [];
-      const hasAccess = currentRoles.includes(role);
+    try {
+      const res = await fetch(`${API_URL}/api/permissions/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ menu, role }),
+      });
 
-      return {
-        ...prev,
-        [menu]: hasAccess
-          ? currentRoles.filter(r => r !== role)
-          : [...currentRoles, role],
-      };
-    });
+      if (!res.ok) {
+        throw new Error('Gagal update permission');
+      }
 
-    toast({
-      title: 'Berhasil',
-      description: 'Hak akses role berhasil diperbarui.',
-    });
+      const updated = await res.json();
+
+      setPermissionRows(prev =>
+        prev.map(p =>
+          p.menu === updated.menu && p.role === updated.role ? updated : p
+        )
+      );
+
+      toast({
+        title: 'Berhasil',
+        description: 'Hak akses berhasil diperbarui.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Gagal',
+        description: 'Hak akses gagal diperbarui.',
+      });
+    }
   }
 
   const roleColor: Record<string, string> = {
@@ -124,7 +163,13 @@ export default function Pengaturan() {
                 <tr key={menu} className="hover:bg-gray-50 transition-colors" data-testid={`row-perm-${menu}`}>
                   <td className="px-5 py-3 font-medium text-gray-800">{menu}</td>
                   {ROLES.map(role => {
-                    const hasAccess = permissions[menu]?.includes(role);
+                    const hasAccess =
+                      role === 'Admin' ||
+                      role === 'Director' ||
+                      permissionRows.some(
+                        p => p.menu === menu && p.role === role && p.canAccess
+                      );
+
                     return (
                       <td key={role} className="px-4 py-3 text-center">
                         <button
