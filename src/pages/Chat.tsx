@@ -17,8 +17,7 @@ const initialUsers = [
   { name: "Rizky", status: "Online", color: "bg-green-500", unread: 0, favorite: false },
 ];
 
-type RoomType = "private" | "group" | "announcement";
-
+type RoomType = "empty" | "private" | "group" | "announcement";
 type Message = {
   id: number;
   roomId: string;
@@ -38,16 +37,14 @@ export default function Chat() {
   const [message, setMessage] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [searchUser, setSearchUser] = useState("");
-  const [activeRoom, setActiveRoom] = useState<RoomType>("private");
-  const [selectedGroupId, setSelectedGroupId] = useState("group");
+  const [activeRoom, setActiveRoom] = useState<RoomType>("empty");  const [selectedGroupId, setSelectedGroupId] = useState("group");
   const [chatFilter, setChatFilter] = useState<
   "all" | "unread" | "favorites" | "groups"
   >("all");
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
-  const [showEmptyScreen, setShowEmptyScreen] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
+  const [showEmptyScreen, setShowEmptyScreen] = useState(true);  const [newGroupName, setNewGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [groups, setGroups] = useState<ChatGroup[]>(() => {
   const savedGroups = localStorage.getItem("chat-groups");
@@ -161,10 +158,10 @@ useEffect(() => {
 
   const currentRoomId =
   activeRoom === "private"
-    ? selectedUser.name
+    ? selectedUser?.name
     : activeRoom === "group"
     ? selectedGroupId
-    : activeRoom;
+    : null;
 
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId

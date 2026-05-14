@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Timer,
   Receipt, MapPin, Megaphone, DollarSign, Settings, X, Menu,
   ChevronRight, MessageCircle,
-} from 'lucide-react'; 
+} from 'lucide-react';
 import type { UserRole } from '@/types/types';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +30,7 @@ const ALL_ROLES: UserRole[] = [
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ALL_ROLES },
   { label: 'Karyawan', path: '/karyawan', icon: Users, allowedRoles: ['Admin', 'Director', 'Accounting'] },
+  { label: 'Pengumuman', path: '/pengumuman', icon: Megaphone, allowedRoles: ALL_ROLES },
   { label: 'Absensi', path: '/absensi', icon: Clock, allowedRoles: ALL_ROLES },
   { label: 'Jadwal Shift', path: '/shift', icon: Calendar, allowedRoles: ALL_ROLES },
   { label: 'Cuti & Izin', path: '/cuti-izin', icon: FileText, allowedRoles: ALL_ROLES },

@@ -14,6 +14,7 @@ import Shift from "@/pages/Shift";
 import CutiIzin from "@/pages/CutiIzin";
 import Lembur from "@/pages/Lembur";
 import Reimbursement from "@/pages/Reimbursement";
+import EmployeeReimbursement from "@/pages/EmployeeReimbursement";
 import Laporan from "@/pages/Laporan";
 import Pengumuman from "@/pages/Pengumuman";
 import Notifikasi from "@/pages/Notifikasi";
@@ -28,6 +29,7 @@ import {
   SEED_NOTIFICATIONS, SEED_PAYROLL, SEED_USERS,
 } from "@/data/seedData";
 import { getFromStorage, setToStorage } from "@/hooks/useLocalStorage";
+import EmployeeReimbursement from "./pages/EmployeeReimbursement";
 
 // Initialize localStorage with seed data on first load
 const SEEDS: Array<[string, unknown]> = [
@@ -80,6 +82,7 @@ function AppRouter() {
         <Route path="/cuti-izin" component={CutiIzin} />
         <Route path="/lembur" component={Lembur} />
         <Route path="/reimbursement" component={Reimbursement} />
+        <Route path="/employee-reimbursement" component={EmployeeReimbursement} />
         <Route path="/laporan" component={Laporan} />
         <Route path="/pengumuman" component={Pengumuman} />
         <Route path="/notifikasi" component={Notifikasi} />

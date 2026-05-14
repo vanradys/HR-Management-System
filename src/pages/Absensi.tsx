@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   Search,
   Filter,
@@ -32,208 +32,274 @@ export default function Absensi() {
     return !!myRecord?.checkIn;
   });
   const [currentLocation, setCurrentLocation] = useState('');
-const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
-function getLocation() {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+const videoRef = useRef<HTMLVideoElement | null>(null);
+const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-      setCurrentLocation(`${lat}, ${lng}`);
-    },
-    (error) => {
-      console.log(error);
+const isMobileDevice =
+  typeof navigator !== 'undefined' &&
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      toast({
-        title: 'GPS gagal',
-        description: 'Lokasi tidak bisa diakses.',
-      });
+  function getLocation() {
+    if (!isMobileDevice) {
+  toast({
+    title: 'Desktop terdeteksi',
+    description: 'GPS desktop mungkin kurang akurat.',
+  });
+}
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        setCurrentLocation(`${lat}, ${lng}`);
+      },
+      (error) => {
+        console.log(error);
+
+        toast({
+          title: 'GPS gagal',
+          description: 'Lokasi tidak bisa diakses.',
+        });
+      }
+    );
+  }
+  async function openDesktopCamera() {
+  try {
+    setShowCamera(true);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
     }
-  );
+  } catch (error) {
+    console.log(error);
+
+    toast({
+      title: 'Kamera gagal',
+      description: 'Kamera tidak bisa diakses. Pastikan izin kamera browser aktif.',
+    });
+  }
 }
 
-const OFFICE_LAT = -6.3387789;
-const OFFICE_LNG = 107.0490620;
-const MAX_RADIUS_METERS = 150;
+function captureDesktopPhoto() {
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
 
-function getDistanceInMeters(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-) {
-  const R = 6371000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  if (!video || !canvas) return;
 
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const context = canvas.getContext('2d');
+  if (!context) return;
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const imageData = canvas.toDataURL('image/png');
+  setSelfiePreview(imageData);
+
+
+  toast({
+  title: 'Foto berhasil diambil',
+  description: 'Selfie absensi berhasil disimpan.',
+});
+
+  const stream = video.srcObject as MediaStream | null;
+  stream?.getTracks().forEach((track) => track.stop());
+
+  setShowCamera(false);
+}
+
+  const OFFICE_LAT = -6.3387789;
+  const OFFICE_LNG = 107.0490620;
+  const MAX_RADIUS_METERS = 150;
+
+  function getDistanceInMeters(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ) {
+    const R = 6371000;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) *
       Math.sin(dLng / 2);
 
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-async function getAddressFromCoordinates(lat: number, lng: number) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-    );
-
-    const data = await res.json();
-    return data.display_name || "Alamat tidak ditemukan";
-  } catch {
-    return "Alamat tidak ditemukan";
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
-}
-const currentUser = {
-  email: "admin@adiyasa.com",
-  employeeId: "ADMIN_TEST",
-  employeeName: "Admin HR PTAA",
-  role: "Admin",
-};
 
-const isTestAdmin = currentUser.email === "admin@adiyasa.com";
+  async function getAddressFromCoordinates(lat: number, lng: number) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      );
+
+      const data = await res.json();
+      return data.display_name || "Alamat tidak ditemukan";
+    } catch {
+      return "Alamat tidak ditemukan";
+    }
+  }
+  const currentUser = {
+    email: "admin@adiyasa.com",
+    employeeId: "ADMIN_TEST",
+    employeeName: "Admin HR PTAA",
+    role: "Admin",
+  };
+
+  const isTestAdmin = currentUser.email === "admin@adiyasa.com";
 
   function handleCheckIn() {
-  if (!selfiePreview) {
-    toast({
-      title: "Selfie wajib diisi",
-      description: "Silakan upload selfie terlebih dahulu sebelum check-in.",
-    });
-    return;
-  }
-
-  const existing = attendance.find(
-  (a) => a.employeeId === currentUser.employeeId && a.date === today
-);
-
-if (existing?.checkIn && !isTestAdmin) {
-  toast({
-    title: "Check-in ditolak",
-    description: "Anda sudah melakukan check-in hari ini.",
-  });
-  return;
-}
-
-
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-
-      const distance = getDistanceInMeters(
-        lat,
-        lng,
-        OFFICE_LAT,
-        OFFICE_LNG
-      );
-
-      if (distance > MAX_RADIUS_METERS) {
+    if (!selfiePreview) {
         toast({
-          title: "Anda tidak berada di kantor",
-          description: `Lokasi Anda terlalu jauh dari PT Adiyasa Abadi. Jarak: ${Math.round(
-            distance
-          )} meter.`,
-        });
-        return;
-      }
+        title: "Selfie wajib diisi",
+        description: isMobileDevice
+          ? "Silakan ambil selfie dari kamera HP terlebih dahulu."
+          : "Silakan ambil selfie dari kamera desktop terlebih dahulu.",
+      });
+      return;
+    }
 
-      const address = await getAddressFromCoordinates(lat, lng);
-      const locationText = `${address} | Koordinat: ${lat}, ${lng}`;
+    const existing = attendance.find(
+      (a) => a.employeeId === currentUser.employeeId && a.date === today
+    );
 
-      setCurrentLocation(locationText);
+    if (existing?.checkIn && !isTestAdmin) {
+      toast({
+        title: "Check-in ditolak",
+        description: "Anda sudah melakukan check-in hari ini.",
+      });
+      return;
+    }
 
-      const existing = attendance.find(
-        (a) => a.employeeId === currentUser.employeeId && a.date === today
-      );
 
-      if (existing) {
-        setAttendance((prev) =>
-          prev.map((a) =>
-            a.id === existing.id
-              ? {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        const distance = getDistanceInMeters(
+          lat,
+          lng,
+          OFFICE_LAT,
+          OFFICE_LNG
+        );
+
+        if (distance > MAX_RADIUS_METERS) {
+          toast({
+            title: "Anda tidak berada di kantor",
+            description: `Lokasi Anda terlalu jauh dari PT Adiyasa Abadi. Jarak: ${Math.round(
+              distance
+            )} meter.`,
+          });
+          return;
+        }
+
+        const address = await getAddressFromCoordinates(lat, lng);
+        const locationText = `${address} | Koordinat: ${lat}, ${lng}`;
+
+        setCurrentLocation(locationText);
+
+        const existing = attendance.find(
+          (a) => a.employeeId === currentUser.employeeId && a.date === today
+        );
+
+        if (existing) {
+          setAttendance((prev) =>
+            prev.map((a) =>
+              a.id === existing.id
+                ? {
                   ...a,
                   checkIn: nowTime,
                   status: nowTime > "08:30" ? "Terlambat" : "Hadir",
                   location: locationText,
                 }
-              : a
-          )
-        );
-      } else {
-        const newRec: Attendance = {
-  id: generateId(),
-  employeeId: currentUser.employeeId,
-  employeeName: currentUser.employeeName,
-  date: today,
-  checkIn: nowTime,
-  checkOut: "",
-  status: nowTime > "08:30" ? "Terlambat" : "Hadir",
-  location: locationText,
-  isTestData: isTestAdmin,
-};
+                : a
+            )
+          );
+        } else {
+          const newRec: Attendance = {
+            id: generateId(),
+            employeeId: currentUser.employeeId,
+            employeeName: currentUser.employeeName,
+            date: today,
+            checkIn: nowTime,
+            checkOut: "",
+            status: nowTime > "08:30" ? "Terlambat" : "Hadir",
+            location: locationText,
+            isTestData: isTestAdmin,
+          };
 
 
-        setAttendance((prev) => [newRec, ...prev]);
+          setAttendance((prev) => [newRec, ...prev]);
+        }
+
+        setCheckedIn(true);
+
+        toast({
+          title: "Check-in Berhasil",
+          description: `Absensi masuk pukul ${nowTime} berhasil dicatat.`,
+        });
+      },
+      () => {
+        toast({
+          title: "GPS wajib aktif",
+          description: "Aktifkan lokasi/GPS terlebih dahulu sebelum check-in.",
+        });
       }
-
-      setCheckedIn(true);
-
-      toast({
-        title: "Check-in Berhasil",
-        description: `Absensi masuk pukul ${nowTime} berhasil dicatat.`,
-      });
-    },
-    () => {
-      toast({
-        title: "GPS wajib aktif",
-        description: "Aktifkan lokasi/GPS terlebih dahulu sebelum check-in.",
-      });
-    }
-  );
-}
+    );
+  }
 
   function handleCheckOut() {
-  const existing = attendance.find(
-    (a) => a.employeeId === currentUser.employeeId && a.date === today
-  );
+    const existing = attendance.find(
+      (a) => a.employeeId === currentUser.employeeId && a.date === today
+    );
 
-  if (!existing?.checkIn && !isTestAdmin) {
+    if (!existing?.checkIn && !isTestAdmin) {
+      toast({
+        title: "Check-out ditolak",
+        description: "Anda belum melakukan check-in hari ini.",
+      });
+      return;
+    }
+
+    if (existing?.checkOut && !isTestAdmin) {
+      toast({
+        title: "Check-out ditolak",
+        description: "Anda sudah melakukan check-out hari ini.",
+      });
+      return;
+    }
+
+    setAttendance((prev) =>
+      prev.map((a) =>
+        a.employeeId === currentUser.employeeId && a.date === today
+          ? { ...a, checkOut: nowTime }
+          : a
+      )
+    );
+
     toast({
-      title: "Check-out ditolak",
-      description: "Anda belum melakukan check-in hari ini.",
+      title: "Check-out Berhasil",
+      description: `Absensi keluar pukul ${nowTime} berhasil dicatat.`,
     });
-    return;
   }
-
-  if (existing?.checkOut && !isTestAdmin) {
-    toast({
-      title: "Check-out ditolak",
-      description: "Anda sudah melakukan check-out hari ini.",
-    });
-    return;
-  }
-
-  setAttendance((prev) =>
-    prev.map((a) =>
-      a.employeeId === currentUser.employeeId && a.date === today
-        ? { ...a, checkOut: nowTime }
-        : a
-    )
-  );
-
-  toast({
-    title: "Check-out Berhasil",
-    description: `Absensi keluar pukul ${nowTime} berhasil dicatat.`,
-  });
-}
 
   const filtered = useMemo(() => {
     return attendance.filter(a => {
-  if (a.isTestData) return false;
+      if (a.isTestData) return false;
       const matchSearch = !search || a.employeeName.toLowerCase().includes(search.toLowerCase());
       const matchDate = !filterDate || a.date === filterDate;
       const matchStatus = !filterStatus || a.status === filterStatus;
@@ -259,39 +325,76 @@ if (existing?.checkIn && !isTestAdmin) {
       {/* Check-in/out card */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Absensi Hari Ini — {new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</h3>
-        
+
         <div className="mb-4">
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Selfie Absensi
-  </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Selfie Absensi
+          </label>
 
-  <input
-    type="file"
-    accept="image/*"
-    capture="user"
-    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+          {isMobileDevice ? (
+          <input
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
 
-      const reader = new FileReader();
+              const reader = new FileReader();
 
-      reader.onloadend = () => {
-        setSelfiePreview(reader.result as string);
-      };
+              reader.onloadend = () => {
+                setSelfiePreview(reader.result as string);
+            };
 
-      reader.readAsDataURL(file);
-    }}
-  />
+            reader.readAsDataURL(file);
+            }}
+            />
+        ) : (
+          <button
+            type="button"
+            onClick={openDesktopCamera}
+            className="w-full px-3 py-2 rounded-lg bg-[#001E8A] text-white text-sm"
+          >
+            Buka Kamera
+          </button>
+        )}
 
-  {selfiePreview && (
-    <img
-      src={selfiePreview}
-      alt="Preview Selfie"
-      className="mt-3 w-32 h-32 rounded-xl object-cover border border-gray-200"
-    />
-  )}
-</div>
+          {selfiePreview && (
+          <div>
+            <p className="text-xs text-green-600 font-medium mb-2">
+              Foto diambil langsung dari kamera
+            </p>
+
+            <img
+              src={selfiePreview}
+              alt="Preview Selfie"
+              className="mt-3 w-32 h-32 rounded-xl object-cover border border-gray-200"
+            />
+          </div>
+        )}
+        </div>
+
+              {showCamera && (
+        <div className="mt-3 space-y-3">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="w-full rounded-lg border border-gray-200"
+          />
+
+          <canvas ref={canvasRef} className="hidden" />
+
+          <button
+            type="button"
+            onClick={captureDesktopPhoto}
+            className="w-full px-3 py-2 rounded-lg bg-green-600 text-white text-sm"
+          >
+            Ambil Foto
+          </button>
+        </div>
+      )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
@@ -316,28 +419,28 @@ if (existing?.checkIn && !isTestAdmin) {
           </button>
         </div>
         <div className="mt-5 p-4 rounded-xl bg-gray-50 border border-gray-100">
-  <div className="flex items-start gap-3">
-    <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
 
-    <div>
-      <p className="text-sm font-semibold text-gray-800">
-        GPS dan Geofencing
-      </p>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">
+                GPS dan Geofencing
+              </p>
 
-      <p className="text-xs text-gray-500 mt-1">
-        Sistem otomatis mencatat lokasi absensi secara real-time.
-      </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Sistem otomatis mencatat lokasi absensi secara real-time.
+              </p>
 
-      <p className="text-xs text-gray-500 mt-2">
-        Lokasi sekarang:
-      </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Lokasi sekarang:
+              </p>
 
-      <p className="text-xs font-mono text-gray-700 mt-1">
-        {currentLocation || 'Belum terdeteksi'}
-      </p>
-    </div>
-  </div>
-</div>
+              <p className="text-xs font-mono text-gray-700 mt-1">
+                {currentLocation || 'Belum terdeteksi'}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-gray-100">
           {[
