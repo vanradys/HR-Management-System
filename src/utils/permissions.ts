@@ -17,23 +17,27 @@ export const isAdminOrDirector = (role: string) =>
 
 // Cek apakah role boleh edit jadwal shift.
 export const canManageShift = (role: string) =>
-  ["Admin", "Director", "Accounting"].includes(role);
+  ["Admin", "Director"].includes(role);
 
 // Cek apakah role boleh approve cuti/lembur.
 export const canApproveRequest = (role: string) =>
   ["Admin", "Director"].includes(role);
 
+// Cek apakah role boleh approve reimbursement.
+export const canApproveReimbursement = (role: string) =>
+  ["Admin", "Director", "Finance"].includes(role);
+
 // Cek apakah role boleh melihat semua reimbursement.
 export const canViewAllReimbursements = (role: string) =>
-  ["Admin", "Director", "Purchasing"].includes(role);
+  ["Admin", "Director", "Finance"].includes(role);
 
 // Cek apakah role boleh mengelola pengumuman.
 export const canManageAnnouncement = (role: string) =>
-  ["Admin", "Accounting"].includes(role);
+  ["Admin", "Director", "HR"].includes(role);
 
 // Cek apakah role boleh melihat rekap payroll semua karyawan.
 export const canViewPayrollSummary = (role: string) =>
-  ["Admin", "Director", "Purchasing"].includes(role);
+  ["Admin", "Director", "Finance"].includes(role);
 
 // Cek apakah role boleh akses pengaturan.
 export const canAccessSettings = (role: string) =>

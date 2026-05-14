@@ -86,7 +86,7 @@ function AppRouter() {
         <Route path="/pengumuman" component={Pengumuman} />
         <Route path="/notifikasi" component={Notifikasi} />
         <Route path="/payroll" component={Payroll} />
-        {auth.role === 'Admin' && <Route path="/pengaturan" component={Pengaturan} />}
+        <Route path="/pengaturan" component={Pengaturan} />
         <Route path="/laporan-harian" component={LaporanHarian} />
         <Route path="/chat" component={Chat} />
         <Route component={NotFound} />

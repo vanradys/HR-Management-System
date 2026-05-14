@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { Check, XCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { ReimbursementRequest } from '@/types/types';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, formatCurrency } from '@/utils/helpers';
+import { canApproveReimbursement } from '@/utils/permissions';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Reimbursement() {
   const { toast } = useToast();
+  const { auth } = useAuth();
+  const canApprove = canApproveReimbursement(auth.role);
   const { addNotification } = useNotifications();
   const [reimbursements, setReimbursements] = useLocalStorage<ReimbursementRequest[]>(  'hrptaa_reimbursements',  [] );  
   const [filter, setFilter] = useState({
@@ -37,6 +41,11 @@ export default function Reimbursement() {
   const pendingCount = filteredReimbursements.filter(r => r.status === 'Pending').length;
 
   function handleApprove(id: string) {
+    if (!canApprove) {
+      toast({ title: 'Akses ditolak', description: 'Hanya Admin, Director, HR, atau Finance yang dapat menyetujui reimbursement.', variant: 'destructive' });
+      return;
+    }
+
     setReimbursements(prev => prev.map(r => r.id === id ? { ...r, status: 'Disetujui' } : r));
     addNotification('reimbursement_update', 'Reimbursement Disetujui', 'Pengajuan reimbursement Anda telah disetujui dan akan segera dibayarkan.','/reimbursement');
     toast({ title: 'Disetujui', description: 'Reimbursement berhasil disetujui.' });
@@ -48,6 +57,11 @@ export default function Reimbursement() {
   }
 
   function handleReject(id: string) {
+    if (!canApprove) {
+      toast({ title: 'Akses ditolak', description: 'Hanya Admin, Director, HR, atau Finance yang dapat menolak reimbursement.', variant: 'destructive' });
+      return;
+    }
+
     setReimbursements(prev => prev.map(r => r.id === id ? { ...r, status: 'Ditolak' } : r));
     toast({ title: 'Ditolak', description: 'Pengajuan reimbursement ditolak.', variant: 'destructive' });
   }
@@ -220,7 +234,7 @@ export default function Reimbursement() {
                   <td className="px-4 py-3"><StatusBadge status={r.paymentStatus} /></td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      {r.status === 'Pending' && (
+                      {r.status === 'Pending' && canApprove && (
                         <>
                           <button onClick={() => handleApprove(r.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Setujui" data-testid={`button-approve-reimb-${r.id}`}><Check className="w-3.5 h-3.5" /></button>
                           <button onClick={() => handleReject(r.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Tolak" data-testid={`button-reject-reimb-${r.id}`}><XCircle className="w-3.5 h-3.5" /></button>

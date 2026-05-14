@@ -64,13 +64,20 @@ const roleColor: Record<UserRole, string> = {
   Purchasing: 'bg-emerald-100 text-emerald-700',
 };
 
+import { useAuth } from '@/hooks/useAuth';
+
 export default function Pengaturan() {
+  const { auth } = useAuth();
   const { toast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const [users, setUsers] = useState<AppUser[]>([]);
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
 
   useEffect(() => {
+    if (auth.role !== 'Admin') {
+      return;
+    }
+
     const token = localStorage.getItem('hrptaa_token');
 
     if (!token) {
@@ -203,6 +210,14 @@ export default function Pengaturan() {
     }
   }
 
+  if (auth.role !== 'Admin') {
+    return (
+      <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
+        <h2 className="text-lg font-bold text-gray-900">Akses Ditolak</h2>
+        <p className="mt-2 text-sm text-gray-500">Halaman Pengaturan hanya dapat diakses oleh Admin.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

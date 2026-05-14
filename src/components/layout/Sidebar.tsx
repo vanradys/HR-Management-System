@@ -38,12 +38,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Jadwal Shift', path: '/shift', icon: Calendar, allowedRoles: ALL_ROLES },
   { label: 'Cuti & Izin', path: '/cuti-izin', icon: FileText, allowedRoles: ALL_ROLES },
   { label: 'Lembur', path: '/lembur', icon: Timer, allowedRoles: ALL_ROLES },
-  { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ['Admin', 'Director', 'HR', 'Finance'], },
-  { label: 'Reimbursement Saya', path: '/employee-reimbursement', icon: Receipt, allowedRoles: ['Purchasing', 'Engineering', 'Marketing', 'Production', 'GA', 'Logistic' ], },  
+  { label: 'Reimbursement', path: '/reimbursement', icon: Receipt, allowedRoles: ['Admin', 'Director', 'HR', 'Finance'] },
+  { label: 'Reimbursement Saya', path: '/employee-reimbursement', icon: Receipt, allowedRoles: ['Purchasing', 'Engineering', 'Marketing', 'Production', 'GA', 'Logistic' ] },
   { label: 'Laporan Lapangan', path: '/laporan', icon: MapPin, allowedRoles: ALL_ROLES },
   { label: 'Laporan Harian', path: '/laporan-harian', icon: FileText, allowedRoles: ALL_ROLES },
   { label: 'Chat', path: '/chat', icon: MessageCircle, allowedRoles: ALL_ROLES },
-  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ['Admin', 'Director', 'Purchasing'] },
+  { label: 'Penggajian', path: '/payroll', icon: DollarSign, allowedRoles: ALL_ROLES },
   { label: 'Pengaturan', path: '/pengaturan', icon: Settings, allowedRoles: ['Admin'] },
 ];
 

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { X, FileText, DollarSign } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { PayrollRecord } from '@/types/types';
-import { SEED_PAYROLL } from '@/data/seedData';
+import { SEED_PAYROLL, SEED_EMPLOYEES } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatCurrency } from '@/utils/helpers';
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from '@/hooks/useAuth';
 
 function getPayrollPeriod(month: number, year: number) {
   const startDate = new Date(year, month - 1, 21);
@@ -43,33 +43,42 @@ export default function Payroll() {
     return record.month === `${selectedMonthName} ${selectedYear}`;
   });
 
-  const totalPayroll = filteredPayroll.reduce(
+  const canViewAllPayroll = ["Admin", "Director", "Finance"].includes(auth.role);
+  const currentEmployee = SEED_EMPLOYEES.find(
+    (emp) => emp.email.toLowerCase() === auth.email.toLowerCase() || emp.name === auth.name
+  );
+
+  const visiblePayroll = canViewAllPayroll
+    ? filteredPayroll
+    : filteredPayroll.filter((record) =>
+        record.employeeId === currentEmployee?.id || record.employeeName === auth.name
+      );
+
+  const totalPayroll = visiblePayroll.reduce(
     (sum, p) => sum + p.totalSalary,
     0
   );
 
-  const totalReimbursement = filteredPayroll.reduce(
+  const totalReimbursement = visiblePayroll.reduce(
     (sum, p) => sum + p.reimbursement,
     0
   );
 
-  const totalOvertime = filteredPayroll.reduce(
+  const totalOvertime = visiblePayroll.reduce(
     (sum, p) => sum + p.overtimePay,
     0
   );
 
-  const totalDeduction = filteredPayroll.reduce(
+  const totalDeduction = visiblePayroll.reduce(
     (sum, p) => sum + p.lateDeduction + p.absenceDeduction,
     0
   );
 
-  const allowedRoles = ["Admin", "HR"];
-
-  if (!allowedRoles.includes(auth.role)) {
+  if (!currentEmployee && !canViewAllPayroll) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
-          Anda tidak memiliki akses ke halaman periode penggajian.
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl p-4">
+          Data slip gaji untuk akun Anda tidak ditemukan. Hubungi Finance bila ini terjadi.
         </div>
       </div>
     );

@@ -16,6 +16,8 @@ type FilterType = 'Semua' | 'Pending' | 'Disetujui' | 'Ditolak';
 export default function CutiIzin() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  const { user } = useAuth();
+  const canManageAction = canApproveRequest(user.role);
   const [leaves, setLeaves] = useLocalStorage<LeaveRequest[]>('hrptaa_leaves', SEED_LEAVES);
   const [filter, setFilter] = useState<FilterType>('Semua');
   const [modalOpen, setModalOpen] = useState(false);
@@ -117,14 +119,14 @@ export default function CutiIzin() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Karyawan', 'Jenis', 'Mulai', 'Selesai', 'Keterangan', 'Diajukan', 'Status', 'Aksi'].map(h => (
+                {['Karyawan', 'Jenis', 'Mulai', 'Selesai', 'Keterangan', 'Diajukan', 'Status', ...(canManageAction ? ['Aksi'] : [])].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-10 text-gray-400">Tidak ada data</td></tr>
+                <tr><td colSpan={canManageAction ? 8 : 7} className="text-center py-10 text-gray-400">Tidak ada data</td></tr>
               ) : filtered.map(req => (
                 <tr key={req.id} className="hover:bg-gray-50 transition-colors" data-testid={`row-leave-${req.id}`}>
                   <td className="px-4 py-3">
@@ -139,28 +141,30 @@ export default function CutiIzin() {
                   <td className="px-4 py-3 text-gray-600 text-xs max-w-40 truncate" title={req.reason}>{req.reason}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(req.submittedAt.split('T')[0])}</td>
                   <td className="px-4 py-3"><StatusBadge status={req.status} /></td>
-                  <td className="px-4 py-3">
-                    {req.status === 'Pending' && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleApprove(req.id)}
-                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Setujui"
-                          data-testid={`button-approve-${req.id}`}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleReject(req.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Tolak"
-                          data-testid={`button-reject-${req.id}`}
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
+                  {canManageAction && (
+                    <td className="px-4 py-3">
+                      {req.status === 'Pending' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleApprove(req.id)}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Setujui"
+                            data-testid={`button-approve-${req.id}`}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleReject(req.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Tolak"
+                            data-testid={`button-reject-${req.id}`}
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -5,6 +5,7 @@ import type { ShiftSchedule, ShiftType } from '@/types/types';
 import { SEED_SHIFTS, SEED_EMPLOYEES } from '@/data/seedData';
 import { generateId, getWeekDates, toDateString } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const SHIFT_TYPES: ShiftType[] = ['Pagi', 'Malam', 'Libur', 'Cuti', 'Izin'];
@@ -38,10 +39,12 @@ const EMPTY_MODAL: ModalState = {
 
 export default function Shift() {
   const { toast } = useToast();
+  const { auth } = useAuth();
   const [shifts, setShifts] = useLocalStorage<ShiftSchedule[]>('hrptaa_shifts', SEED_SHIFTS);
   const [weekOffset, setWeekOffset] = useState(0);
   const [modal, setModal] = useState<ModalState>(EMPTY_MODAL);
 
+  const canEditShift = ['Admin', 'Director'].includes(auth.role);
   const weekDates = getWeekDates(weekOffset);
   const employees = SEED_EMPLOYEES.filter(e => e.status === 'Aktif').slice(0, 8);
 
@@ -65,10 +68,13 @@ export default function Shift() {
   }
 
   function openNewModal() {
+    if (!canEditShift) return;
     setModal({ ...EMPTY_MODAL, open: true, date: toDateString(weekDates[0]) });
   }
 
   function handleSave() {
+    if (!canEditShift) return;
+
     const noTime = ['Libur', 'Cuti', 'Izin', '-'].includes(modal.shift);
     if (modal.existingId) {
       setShifts(prev => prev.map(s => s.id === modal.existingId
@@ -100,13 +106,23 @@ export default function Shift() {
         </div>
         <button
           onClick={openNewModal}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90"
-          style={{ backgroundColor: '#E30613' }}
+          disabled={!canEditShift}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors',
+            canEditShift ? 'text-white hover:opacity-90' : 'text-white/70 cursor-not-allowed bg-gray-400'
+          )}
+          style={{ backgroundColor: canEditShift ? '#E30613' : '#9CA3AF' }}
           data-testid="button-atur-jadwal"
         >
           <Plus className="w-4 h-4" /> Atur Jadwal
         </button>
       </div>
+
+      {!canEditShift && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Hanya Admin dan Director yang dapat mengubah jadwal shift. Anda dapat melihat jadwal ini dalam mode baca saja.
+        </div>
+      )}
 
       {/* Week navigator */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
@@ -183,14 +199,15 @@ export default function Shift() {
                     const shiftVal: ShiftType = sched?.shift || '-';
                     return (
                       <td key={di} className="px-1 py-1.5 text-center">
-                        <button
-                          onClick={() => openModal(emp, date)}
+                                        <button
+                          onClick={() => canEditShift && openModal(emp, date)}
                           className={cn(
-                            'w-full px-1.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer',
-                            SHIFT_COLORS[shiftVal]
+                            'w-full px-1.5 py-1.5 rounded-lg border text-xs font-medium transition-all',
+                            SHIFT_COLORS[shiftVal],
+                            !canEditShift && 'cursor-not-allowed opacity-85'
                           )}
                           data-testid={`cell-shift-${emp.id}-${di}`}
-                          title={`${emp.name} — ${toDateString(date)}`}
+                          title={canEditShift ? `${emp.name} — ${toDateString(date)}` : 'Hanya Admin dan Director yang dapat mengedit jadwal'}
                         >
                           {shiftVal}
                           {sched?.startTime && !['Libur', 'Cuti', 'Izin', '-'].includes(shiftVal) && (

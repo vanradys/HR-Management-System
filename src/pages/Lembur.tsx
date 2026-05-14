@@ -8,10 +8,14 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, generateId, getCurrentDatetime, calculateHours } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { canApproveRequest } from '@/utils/permissions';
 
 export default function Lembur() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  const { user } = useAuth();
+  const canManageAction = canApproveRequest(user.role);
   const [overtime, setOvertime] = useLocalStorage<OvertimeRequest[]>('hrptaa_overtime', SEED_OVERTIME);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ date: '', startTime: '17:00', endTime: '20:00', reason: '' });
@@ -80,14 +84,14 @@ export default function Lembur() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Karyawan', 'Tanggal', 'Mulai', 'Selesai', 'Total Jam', 'Alasan', 'Status', 'Aksi'].map(h => (
+                {['Karyawan', 'Tanggal', 'Mulai', 'Selesai', 'Total Jam', 'Alasan', 'Status', ...(canManageAction ? ['Aksi'] : [])].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {overtime.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-10 text-gray-400">Tidak ada data lembur</td></tr>
+                <tr><td colSpan={canManageAction ? 8 : 7} className="text-center py-10 text-gray-400">Tidak ada data lembur</td></tr>
               ) : overtime.map(ot => (
                 <tr key={ot.id} className="hover:bg-gray-50 transition-colors" data-testid={`row-lembur-${ot.id}`}>
                   <td className="px-4 py-3">
@@ -104,14 +108,16 @@ export default function Lembur() {
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs max-w-40 truncate" title={ot.reason}>{ot.reason}</td>
                   <td className="px-4 py-3"><StatusBadge status={ot.status} /></td>
-                  <td className="px-4 py-3">
-                    {ot.status === 'Pending' && (
-                      <div className="flex gap-1">
-                        <button onClick={() => handleApprove(ot.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Setujui" data-testid={`button-approve-lembur-${ot.id}`}><Check className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => handleReject(ot.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Tolak" data-testid={`button-reject-lembur-${ot.id}`}><XCircle className="w-3.5 h-3.5" /></button>
-                      </div>
-                    )}
-                  </td>
+                  {canManageAction && (
+                    <td className="px-4 py-3">
+                      {ot.status === 'Pending' && (
+                        <div className="flex gap-1">
+                          <button onClick={() => handleApprove(ot.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Setujui" data-testid={`button-approve-lembur-${ot.id}`}><Check className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleReject(ot.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Tolak" data-testid={`button-reject-lembur-${ot.id}`}><XCircle className="w-3.5 h-3.5" /></button>
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
