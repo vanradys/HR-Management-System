@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model RolePermission {
+  id        Int      @id @default(autoincrement())
+  menu      String
+  role      String
+  canAccess Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([menu, role])
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String
