@@ -88,7 +88,7 @@ export function Sidebar({ role, unreadCount, isOpen, onClose }: SidebarProps) {
         {/* Logo */}
         <div id="logo-area" className="flex items-center justify-between px-5 py-4 border-b border-white/10 gap-3">
           <div className="flex items-center gap-3">
-            <img src={logoSrc} alt="Adiyasa logo" className="w-20 h-20 object-contain" />
+            <img src={logoSrc} alt="Adiyasa logo" className="w-14 h-14 object-contain" />
             <div>
               <div className="text-white font-black text-xl tracking-widest leading-none">ADIYASA</div>
               <div className="text-xs font-semibold tracking-wider mt-0.5" style={{ color: '#E30613' }}>HR PTAA</div>
