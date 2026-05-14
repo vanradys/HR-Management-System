@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 
+const logoSrc = new URL('../assets/adiyasa-logo.png', import.meta.url).href;
+
 interface LoginProps {
   onLogin: (name: string, email: string, role: import('@/types/types').UserRole) => void;
 }
@@ -66,16 +68,17 @@ export default function Login({ onLogin }: LoginProps) {
         style={{ backgroundColor: '#001E8A' }}
       >
         {/* Red accent top bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: '#E30613' }} />
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: '#E30613' }} />
 
         {/* Decorative circles */}
         <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full opacity-10" style={{ backgroundColor: '#E30613' }} />
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-10" style={{ backgroundColor: '#ffffff' }} />
 
         <div className="relative z-10">
-          <div id="logo-area">
+          <div id="logo-area" className="flex flex-col items-center gap-5">
             <div className="text-white font-black text-3xl tracking-widest leading-none">ADIYASA</div>
-            <div className="text-sm font-bold tracking-widest mt-1" style={{ color: '#E30613' }}>HR PTAA</div>
+            <div className="text-sm font-bold tracking-widest" style={{ color: '#E30613' }}>HR PTAA</div>
+            <img src={logoSrc} alt="Adiyasa logo" className="w-40 h-40 object-contain" />
           </div>
         </div>
 
@@ -103,6 +106,7 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="lg:hidden text-center mb-8">
             <div className="text-3xl font-black tracking-widest" style={{ color: '#001E8A' }}>ADIYASA</div>
             <div className="text-sm font-bold tracking-widest" style={{ color: '#E30613' }}>HR PTAA</div>
+            <img src={logoSrc} alt="Adiyasa logo" className="mx-auto mt-4 w-32 h-32 object-contain" />
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">

@@ -1,28 +1,19 @@
 import { useState } from 'react';
-import { Plus, X, Check, XCircle } from 'lucide-react';
+import { Check, XCircle } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { ReimbursementRequest } from '@/types/types';
 import { SEED_REIMBURSEMENTS } from '@/data/seedData';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
-import { formatDate, formatCurrency, generateId, getCurrentDatetime } from '@/utils/helpers';
+import { formatDate, formatCurrency } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
-
-const CATEGORIES = ['Transport', 'Makan', 'Kesehatan', 'Peralatan', 'Lainnya'] as const;
 
 export default function Reimbursement() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [reimbursements, setReimbursements] = useLocalStorage<ReimbursementRequest[]>('hrptaa_reimbursements', SEED_REIMBURSEMENTS);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({
-  date: '',
-  category: 'Transport' as typeof CATEGORIES[number],
-  amount: '',
-  description: '',
-  proof: '',
-});
+  
   const [filter, setFilter] = useState({
     month: '',
     year: '',
@@ -47,25 +38,6 @@ export default function Reimbursement() {
 
   const pendingCount = filteredReimbursements.filter(r => r.status === 'Pending').length;
 
-  function handleSubmit() {
-    if (!form.date || !form.amount || !form.description || !form.proof) {
-      toast({ title: 'Gagal', description: 'Harap isi semua field wajib.', variant: 'destructive' });
-      return;
-    }
-    const newReq: ReimbursementRequest = {
-      id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
-      date: form.date, category: form.category,
-      amount: parseInt(form.amount.replace(/\D/g, ''), 10) || 0,
-      description: form.description, proof: form.proof, status: 'Pending',
-      paymentStatus: 'Belum Dibayar', submittedAt: getCurrentDatetime(),
-    };
-    setReimbursements(prev => [newReq, ...prev]);
-    addNotification('reimbursement_update', 'Reimbursement Dikirim', `Pengajuan reimbursement ${formatCurrency(newReq.amount)} sedang diproses.`, '/reimbursement');
-    toast({ title: 'Berhasil', description: 'Pengajuan reimbursement berhasil dikirim.' });
-    setModalOpen(false);
-    setForm({ date: '', category: 'Transport', amount: '', description: '', proof: '' });
-  }
-
   function handleApprove(id: string) {
     setReimbursements(prev => prev.map(r => r.id === id ? { ...r, status: 'Disetujui' } : r));
     addNotification('reimbursement_update', 'Reimbursement Disetujui', 'Pengajuan reimbursement Anda telah disetujui dan akan segera dibayarkan.','/reimbursement');
@@ -86,9 +58,7 @@ export default function Reimbursement() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900">Reimbursement</h2>
-        <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90" style={{ backgroundColor: '#E30613' }} data-testid="button-ajukan-reimb">
-          <Plus className="w-4 h-4" /> Ajukan
-        </button>
+
       </div>
 
       <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
@@ -269,91 +239,6 @@ export default function Reimbursement() {
           </table>
         </div>
       </div>
-
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h3 className="text-base font-semibold text-gray-900">Ajukan Reimbursement</h3>
-              <button onClick={() => setModalOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pengeluaran *</label>
-                <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" data-testid="input-reimb-date" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => setForm(f => ({ ...f, category: c }))}
-                      className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${form.category === c ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-                      data-testid={`cat-${c}`}
-                    >{c}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp) *</label>
-                <input
-                  type="number"
-                  value={form.amount}
-                  onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-                  placeholder="0"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
-                  data-testid="input-reimb-amount"
-                />
-
-<div className="mt-3">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Upload Bukti Struk/Nota *
-  </label>
-
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm(f => ({ ...f, proof: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }}
-    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-  />
-</div>
-
-              </div>
-              <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan *</label>
-  <textarea
-    value={form.description}
-    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-    rows={2}
-    placeholder="Jelaskan keperluan pengeluaran..."
-    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none"
-    data-testid="input-reimb-desc"
-  />
-  <p className="text-xs text-gray-500 mt-1 italic">
-    *Note: semua bukti wajib diserahkan ke purchasing
-  </p>
-</div>
-            </div>
-            <div className="px-5 py-4 border-t flex justify-end gap-3">
-              <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
-              <button onClick={handleSubmit} className="px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90" style={{ backgroundColor: '#E30613' }} data-testid="button-submit-reimb">
-                Kirim Pengajuan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

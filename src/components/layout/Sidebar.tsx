@@ -7,6 +7,8 @@ import {
 import type { UserRole } from '@/types/types';
 import { cn } from '@/lib/utils';
 
+const logoSrc = new URL('../../assets/adiyasa-logo.png', import.meta.url).href;
+
 interface NavItem {
   label: string;
   path: string;
@@ -84,10 +86,13 @@ export function Sidebar({ role, unreadCount, isOpen, onClose }: SidebarProps) {
         <div className="h-1 w-full" style={{ backgroundColor: '#E30613' }} />
 
         {/* Logo */}
-        <div id="logo-area" className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <div>
-            <div className="text-white font-black text-xl tracking-widest leading-none">ADIYASA</div>
-            <div className="text-xs font-semibold tracking-wider mt-0.5" style={{ color: '#E30613' }}>HR PTAA</div>
+        <div id="logo-area" className="flex items-center justify-between px-5 py-4 border-b border-white/10 gap-3">
+          <div className="flex items-center gap-3">
+            <img src={logoSrc} alt="Adiyasa logo" className="w-10 h-10 object-contain" />
+            <div>
+              <div className="text-white font-black text-xl tracking-widest leading-none">ADIYASA</div>
+              <div className="text-xs font-semibold tracking-wider mt-0.5" style={{ color: '#E30613' }}>HR PTAA</div>
+            </div>
           </div>
           <button
             className="lg:hidden text-white/70 hover:text-white p-1"
