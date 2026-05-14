@@ -122,28 +122,21 @@ app.get(
     }
   }
 );
+
+app.get(
+  "/api/permissions",
   authMiddleware,
   allowRoles("Admin"),
   async (req, res) => {
     try {
-      const users = await prisma.user.findMany({
-        orderBy: [{ id: "asc" }],
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          status: true,
-        },
+      const permissions = await prisma.rolePermission.findMany({
+        orderBy: [{ menu: "asc" }, { role: "asc" }],
       });
 
-      res.json(users.map((user) => ({
-        ...user,
-        id: String(user.id),
-      })));
+      res.json(permissions);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Gagal mengambil daftar pengguna." });
+      res.status(500).json({ message: "Gagal mengambil permissions." });
     }
   }
 );

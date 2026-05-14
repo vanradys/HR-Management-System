@@ -1,7 +1,35 @@
 import { useEffect, useState } from 'react';
+import { Check, Minus } from 'lucide-react';
 import type { AppUser, UserRole } from '@/types/types';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { useToast } from '@/hooks/use-toast';
+
+type MenuItem =
+  | 'Dashboard'
+  | 'Karyawan'
+  | 'Absensi'
+  | 'Shift'
+  | 'Cuti & Izin'
+  | 'Lembur'
+  | 'Reimbursement'
+  | 'Laporan'
+  | 'Pengumuman'
+  | 'Payroll'
+  | 'Pengaturan';
+
+const MENU_ITEMS: MenuItem[] = [
+  'Dashboard',
+  'Karyawan',
+  'Absensi',
+  'Shift',
+  'Cuti & Izin',
+  'Lembur',
+  'Reimbursement',
+  'Laporan',
+  'Pengumuman',
+  'Payroll',
+  'Pengaturan',
+];
 
 const ROLES = [
   'Admin',
@@ -15,6 +43,13 @@ const ROLES = [
   'Logistic',
   'Purchasing',
 ] as const;
+
+type PermissionRow = {
+  id: number;
+  menu: MenuItem;
+  role: UserRole;
+  canAccess: boolean;
+};
 
 const roleColor: Record<UserRole, string> = {
   Admin: 'bg-red-100 text-red-700',
@@ -33,6 +68,7 @@ export default function Pengaturan() {
   const { toast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('hrptaa_token');
@@ -45,17 +81,27 @@ export default function Pengaturan() {
       return;
     }
 
-    async function fetchUsers() {
+    async function fetchData() {
       try {
-        const userRes = await fetch(`${API_URL}/api/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [permRes, userRes] = await Promise.all([
+          fetch(`${API_URL}/api/permissions`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/api/users`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-        if (!userRes.ok) {
-          throw new Error('Fetch users failed');
+        if (!permRes.ok || !userRes.ok) {
+          throw new Error('Fetch settings failed');
         }
 
-        const usersData = await userRes.json();
+        const [permissions, usersData] = await Promise.all([
+          permRes.json(),
+          userRes.json(),
+        ]);
+
+        setPermissionRows(permissions);
         setUsers(usersData.map((user: any) => ({
           ...user,
           id: String(user.id),
@@ -64,12 +110,12 @@ export default function Pengaturan() {
         console.error(err);
         toast({
           title: 'Gagal',
-          description: 'Gagal mengambil data pengguna dari server.',
+          description: 'Gagal mengambil data dari server.',
         });
       }
     }
 
-    fetchUsers();
+    fetchData();
   }, [API_URL, toast]);
 
   async function handleRoleChange(id: string, role: UserRole) {
@@ -160,6 +206,70 @@ export default function Pengaturan() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-base font-semibold text-gray-900">Hak Akses per Role</h3>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Tampilan hak akses menu berdasarkan role pengguna
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-44">
+                  Menu
+                </th>
+                {ROLES.map((role) => (
+                  <th
+                    key={role}
+                    className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide"
+                  >
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${roleColor[role]}`}
+                    >
+                      {role}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {MENU_ITEMS.map((menu) => (
+                <tr key={menu} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-3 font-medium text-gray-800">{menu}</td>
+                  {ROLES.map((role) => {
+                    const hasAccess =
+                      role === 'Admin' ||
+                      role === 'Director' ||
+                      permissionRows.some(
+                        (p) => p.menu === menu && p.role === role && p.canAccess
+                      );
+
+                    return (
+                      <td key={role} className="px-4 py-3 text-center">
+                        <div className="mx-auto flex justify-center">
+                          {hasAccess ? (
+                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                              <Check className="w-3.5 h-3.5 text-green-600" />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                              <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
           <h3 className="text-base font-semibold text-gray-900">Daftar Pengguna</h3>
