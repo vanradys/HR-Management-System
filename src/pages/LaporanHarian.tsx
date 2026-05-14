@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useAuth } from '@/hooks/useAuth';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 type Task = {
     nama: string;
@@ -23,13 +25,21 @@ export default function LaporanHarian() {
     const [activeTab, setActiveTab] = useState<'form' | 'todo' | 'riwayat'>('form');
     const today = new Date().toISOString().split("T")[0];
 
+    const { auth } = useAuth();
+    const storageKey = `laporan-harian-list-${auth.userId || 'guest'}`;
     const [nama, setNama] = useState("");
     const [tanggal, setTanggal] = useState(today);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [catatanTambahan, setCatatanTambahan] = useState("");
     const [rencana, setRencana] = useState("");
     const [status, setStatus] = useState<"draft" | "submitted">("draft");
-    const [reports, setReports] = useState<DailyReport[]>([]);
+    const [reports, setReports] = useLocalStorage<DailyReport[]>(storageKey, []);
+
+    useEffect(() => {
+      if (auth.name && auth.userId) {
+        setNama(auth.name);
+      }
+    }, [auth.name, auth.userId]);
 
     // tambah task
     const addTask = () => {
@@ -107,12 +117,6 @@ const removeTask = (index: number) => {
     ];
 
     setReports(updatedReports);
-
-    localStorage.setItem(
-        "laporan-harian-list",
-        JSON.stringify(updatedReports)
-    );
-
     setStatus(newStatus);
 
     alert(
@@ -122,27 +126,19 @@ const removeTask = (index: number) => {
     );
 };
 
-    // load data
-
+    // load today report when auth is ready
     useEffect(() => {
-    const saved = localStorage.getItem("laporan-harian-list");
+      const todayReport = reports.find((r) => r.tanggal === today);
 
-    if (saved) {
-        const parsed: DailyReport[] = JSON.parse(saved);
-        setReports(parsed);
-
-        const todayReport = parsed.find((r) => r.tanggal === today);
-
-        if (todayReport) {
-            setNama(todayReport.nama);
-            setTanggal(todayReport.tanggal);
-            setTasks(todayReport.tasks);
-            setCatatanTambahan(todayReport.catatanTambahan);
-            setRencana(todayReport.rencana);
-            setStatus(todayReport.status);
-        }
-    }
-}, []);
+      if (todayReport) {
+        setNama(todayReport.nama);
+        setTanggal(todayReport.tanggal);
+        setTasks(todayReport.tasks);
+        setCatatanTambahan(todayReport.catatanTambahan);
+        setRencana(todayReport.rencana);
+        setStatus(todayReport.status);
+      }
+    }, [reports, today]);
 
     return (
         <div className="p-6 space-y-6 text-gray-900">

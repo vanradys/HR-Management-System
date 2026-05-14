@@ -28,7 +28,7 @@ export default function Pengumuman() {
     }
     const newAnn: Announcement = {
       id: generateId(), title: form.title, content: form.content,
-      priority: form.priority, publishDate: form.publishDate, authorName: 'Administrator',
+      priority: form.priority, publishDate: form.publishDate, authorName: auth.name || 'Administrator',
     };
     setAnnouncements(prev => [newAnn, ...prev]);
     toast({ title: 'Berhasil', description: 'Pengumuman berhasil dipublikasikan.' });

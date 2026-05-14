@@ -7,6 +7,7 @@ import {
   MapPin,
   Camera
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { Attendance } from '@/types/types';
 import { SEED_ATTENDANCE } from '@/data/seedData';
@@ -26,9 +27,26 @@ export default function Absensi() {
 
   const today = new Date().toISOString().split('T')[0];
   const nowTime = new Date().toTimeString().slice(0, 5);
+  const { auth } = useAuth();
+
+  const currentUser = {
+    email: auth.email || '',
+    employeeId: auth.userId || 'EMP001',
+    employeeName: auth.name || 'Administrator',
+    role: auth.role,
+  };
+
+  const canViewAll = [
+    'Admin',
+    'Director',
+    'HR',
+    'Finance',
+  ].includes(auth.role);
 
   const [checkedIn, setCheckedIn] = useState(() => {
-    const myRecord = attendance.find(a => a.employeeId === 'EMP001' && a.date === today);
+    const myRecord = attendance.find(
+      a => a.employeeId === currentUser.employeeId && a.date === today
+    );
     return !!myRecord?.checkIn;
   });
   const [currentLocation, setCurrentLocation] = useState('');
@@ -152,14 +170,7 @@ function captureDesktopPhoto() {
       return "Alamat tidak ditemukan";
     }
   }
-  const currentUser = {
-    email: "admin@adiyasa.com",
-    employeeId: "ADMIN_TEST",
-    employeeName: "Admin HR PTAA",
-    role: "Admin",
-  };
-
-  const isTestAdmin = currentUser.email === "admin@adiyasa.com";
+  const isTestAdmin = auth.role === 'Admin';
 
   function handleCheckIn() {
     if (!selfiePreview) {
@@ -221,11 +232,11 @@ function captureDesktopPhoto() {
             prev.map((a) =>
               a.id === existing.id
                 ? {
-                  ...a,
-                  checkIn: nowTime,
-                  status: nowTime > "08:30" ? "Terlambat" : "Hadir",
-                  location: locationText,
-                }
+                    ...a,
+                    checkIn: nowTime,
+                    status: nowTime > "08:30" ? "Terlambat" : "Hadir",
+                    location: locationText,
+                  }
                 : a
             )
           );
@@ -241,7 +252,6 @@ function captureDesktopPhoto() {
             location: locationText,
             isTestData: isTestAdmin,
           };
-
 
           setAttendance((prev) => [newRec, ...prev]);
         }
@@ -297,18 +307,20 @@ function captureDesktopPhoto() {
     });
   }
 
+  const visibleAttendance = canViewAll ? attendance : attendance.filter(a => a.employeeId === currentUser.employeeId);
+
   const filtered = useMemo(() => {
-    return attendance.filter(a => {
+    return visibleAttendance.filter(a => {
       if (a.isTestData) return false;
       const matchSearch = !search || a.employeeName.toLowerCase().includes(search.toLowerCase());
       const matchDate = !filterDate || a.date === filterDate;
       const matchStatus = !filterStatus || a.status === filterStatus;
       return matchSearch && matchDate && matchStatus;
     });
-  }, [attendance, search, filterDate, filterStatus]);
+  }, [visibleAttendance, search, filterDate, filterStatus]);
 
   const todayStats = useMemo(() => {
-    const today2 = attendance.filter(a => a.date === today);
+    const today2 = visibleAttendance.filter(a => a.date === today);
 
     return {
       hadir: today2.filter(a => a.status === 'Hadir').length,
@@ -318,7 +330,7 @@ function captureDesktopPhoto() {
       sakit: today2.filter(a => a.status === 'Sakit').length,
       absen: today2.filter(a => a.status === 'Absen').length,
     };
-  }, [attendance, today]);
+  }, [visibleAttendance, today]);
 
   return (
     <div className="space-y-5">
@@ -409,7 +421,7 @@ function captureDesktopPhoto() {
           </button>
           <button
             onClick={handleCheckOut}
-            disabled={checkedIn && !isTestAdmin}
+            disabled={!checkedIn && !isTestAdmin}
             className="flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#E30613' }}
             data-testid="button-check-out"

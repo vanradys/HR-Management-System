@@ -17,11 +17,14 @@ export function useAuth() {
     return getFromStorage<AuthState>(AUTH_KEY, DEFAULT_AUTH);
   });
 
-  const login = useCallback((name: string, email: string, role: UserRole = 'Admin') => {
-    const newAuth: AuthState = { isLoggedIn: true, userId: 'EMP001', name, email, role };
-    setAuth(newAuth);
-    setToStorage(AUTH_KEY, newAuth);
-  }, []);
+  const login = useCallback(
+    (userId: string, name: string, email: string, role: UserRole = 'Admin') => {
+      const newAuth: AuthState = { isLoggedIn: true, userId, name, email, role };
+      setAuth(newAuth);
+      setToStorage(AUTH_KEY, newAuth);
+    },
+    []
+  );
 
   const logout = useCallback(() => {
     setAuth(DEFAULT_AUTH);

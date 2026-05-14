@@ -6,7 +6,7 @@ import { useLocation } from 'wouter';
 const logoSrc = new URL('../assets/adiyasa-logo.png', import.meta.url).href;
 
 interface LoginProps {
-  onLogin: (name: string, email: string, role: import('@/types/types').UserRole) => void;
+  onLogin: (userId: string, name: string, email: string, role: import('@/types/types').UserRole) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -51,7 +51,8 @@ export default function Login({ onLogin }: LoginProps) {
       localStorage.setItem('hrptaa_token', data.token);
       localStorage.setItem('hrptaa_auth_user', JSON.stringify(data.user));
 
-      onLogin(data.user.name, data.user.email, data.user.role);
+      const userId = data.user.id ? String(data.user.id) : data.user.email || data.user.name;
+      onLogin(userId, data.user.name, data.user.email, data.user.role);
       navigate('/');
     } catch (error) {
       setError('Tidak dapat terhubung ke server backend.');

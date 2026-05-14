@@ -7,9 +7,15 @@ import { SEED_REPORTS } from '@/data/seedData';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDateTime, generateId, getCurrentDatetime } from '@/utils/helpers';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { SEED_EMPLOYEES } from '@/data/seedData';
 
 export default function Laporan() {
+  const { auth } = useAuth();
+  const currentUser = {
+    employeeId: auth.userId || 'EMP001',
+    employeeName: auth.name || 'Administrator',
+  };
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [reports, setReports] = useLocalStorage<FieldReport[]>('hrptaa_reports', SEED_REPORTS);
@@ -38,9 +44,15 @@ export default function Laporan() {
       return;
     }
     const newReport: FieldReport = {
-      id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
-      title: form.title, description: form.description, location: form.location,
-      mediaUrls: [], datetime: getCurrentDatetime(), comments: [],
+      id: generateId(),
+      employeeId: currentUser.employeeId,
+      employeeName: currentUser.employeeName,
+      title: form.title,
+      description: form.description,
+      location: form.location,
+      mediaUrls: [],
+      datetime: getCurrentDatetime(),
+      comments: [],
     };
 
     const taggedEmployees = SEED_EMPLOYEES.filter((employee) =>
@@ -76,8 +88,10 @@ export default function Laporan() {
   function handleAddComment() {
     if (!commentText.trim() || !detailReport) return;
     const newComment: ReportComment = {
-      id: generateId(), commenterName: 'Administrator',
-      comment: commentText.trim(), timestamp: getCurrentDatetime(),
+      id: generateId(),
+      commenterName: currentUser.employeeName,
+      comment: commentText.trim(),
+      timestamp: getCurrentDatetime(),
     };
     setReports(prev => prev.map(r =>
       r.id === detailReport.id ? { ...r, comments: [...r.comments, newComment] } : r
@@ -222,7 +236,7 @@ export default function Laporan() {
 
               {/* Comment input */}
               <div className="flex gap-2 pt-2 border-t border-gray-100">
-                <EmployeeAvatar name="Administrator" size="sm" />
+                <EmployeeAvatar name={currentUser.employeeName} size="sm" />
                 <div className="flex-1 flex gap-2">
                   <input
                     value={commentText}

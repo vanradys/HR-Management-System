@@ -6,7 +6,7 @@ import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 
 type UserRole =
   | "Admin"
-  | "HRD"
+  | "HR"
   | "Director"
   | "Purchasing"
   | "Engineering"
@@ -238,7 +238,7 @@ const saveNotification = (newReimbursement: Reimbursement) => {
     }/${newReimbursement.department} sebesar ${formatRupiah(
       newReimbursement.amount
     )}.`,
-    targetRoles: ["Admin", "HRD", "HR", "Director", "Finance", "Accounting"],
+    targetRoles: ["Admin", "HR", "Director", "Finance", "Accounting"],
     isRead: false,
     link: "/reimbursement",
     createdAt: new Date().toISOString(),
@@ -307,7 +307,7 @@ const handleSubmitReimbursement = (e: React.FormEvent<HTMLFormElement>) => {
             Akses diarahkan ke halaman Reimbursement utama
           </h2>
           <p className="text-sm text-yellow-700 mt-1">
-            Role Admin, HRD, dan Director tetap menggunakan halaman reimbursement
+            Role Admin, HR, dan Director tetap menggunakan halaman reimbursement
             full akses.
           </p>
         </div>
