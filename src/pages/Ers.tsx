@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Calendar, CreditCard, FileText, Search } from "lucide-react";
+import { Calendar, CreditCard, FileText, Plus, Search } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 
@@ -37,14 +37,6 @@ type Reimbursement = {
   description: string;
   status: ReimbursementStatus;
   paymentStatus: PaymentStatus;
-};
-
-const currentUser: CurrentUser = {
-  id: "u-002",
-  employeeId: "EMP002",
-  name: "Hendra Gunawan",
-  role: "Purchasing",
-  department: "Purchasing",
 };
 
 const SEED_REIMBURSEMENTS: Reimbursement[] = [
@@ -97,6 +89,9 @@ const SEED_REIMBURSEMENTS: Reimbursement[] = [
     paymentStatus: "Belum Dibayar",
   },
 ];
+const STORAGE_KEY = "hrptaa_reimbursements";
+const NOTIFICATION_KEY = "hrptaa_notifications";
+const MAX_REIMBURSE_AMOUNT = 100000000;
 
 function formatRupiah(value: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -114,26 +109,56 @@ function formatDate(date: string) {
   });
 }
 
-function isManagementRole(role: string) {
-  return ["Admin", "HRD", "Director"].includes(role);
+function getTodayISO() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().split("T")[0];
 }
 
-export default function EmployeeReimbursement() {
-  const currentUser = JSON.parse(
-    localStorage.getItem("hrptaa_auth_user") || "{}"
+function isManagementRole(role?: string) {
+  return ["Admin", "HR", "Director", "Finance"].includes(
+    role || ""
   );
-
-const blockedRoles = [
-  "Admin",
-  "Director",
-  "HR",
-  "Finance",
-];
-
-if (blockedRoles.includes(currentUser.role)) {
-  window.location.href = "/reimbursement";
-  return null;
 }
+
+    export default function EmployeeReimbursement() {
+      const currentUser = JSON.parse(
+        localStorage.getItem("hrptaa_auth_user") || "{}"
+      );
+
+    const blockedRoles = [
+      "Admin",
+      "Director",
+      "HR",
+      "Finance",
+    ];
+
+    if (blockedRoles.includes(currentUser.role)) {
+      window.location.href = "/reimbursement";
+      return null;
+    }
+      const today = getTodayISO();
+
+    const [reimbursements, setReimbursements] = useState<Reimbursement[]>(() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved) {
+        return JSON.parse(saved);
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_REIMBURSEMENTS));
+      return SEED_REIMBURSEMENTS;
+    });
+
+    const [showForm, setShowForm] = useState(false);
+    const [amountWarning, setAmountWarning] = useState(false);
+
+    const [form, setForm] = useState({
+      date: today,
+      category: "Transport",
+      amount: "",
+      description: "",
+    });
   const currentDate = new Date();
 
   const [month, setMonth] = useState(
@@ -147,14 +172,22 @@ if (blockedRoles.includes(currentUser.role)) {
   const [endDate, setEndDate] = useState("");
 
   const allowedData = useMemo(() => {
-    if (isManagementRole(currentUser.role)) return [];
+  if (isManagementRole(currentUser.role)) return [];
 
-    return SEED_REIMBURSEMENTS.filter(
-      (item) =>
-        item.employeeId === currentUser.employeeId ||
-        item.department === currentUser.department
-    );
-  }, []);
+  return reimbursements.filter(
+    (item) =>
+      item.employeeId === currentUser.employeeId ||
+      item.employeeId === currentUser.id ||
+      item.department === currentUser.department ||
+      item.department === currentUser.role
+  );
+}, [
+  reimbursements,
+  currentUser.employeeId,
+  currentUser.id,
+  currentUser.department,
+  currentUser.role,
+]);
 
   const filteredData = useMemo(() => {
     return allowedData.filter((item) => {
@@ -228,6 +261,99 @@ const filterLabel = useMemo(() => {
   } ${new Date().getFullYear()}`;
 }, [month, year, startDate, endDate]);
 
+const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawValue = e.target.value.replace(/\D/g, "");
+  const numericValue = Number(rawValue);
+
+  if (numericValue > MAX_REIMBURSE_AMOUNT) {
+    setAmountWarning(true);
+    setForm((prev) => ({
+      ...prev,
+      amount: String(MAX_REIMBURSE_AMOUNT),
+    }));
+    return;
+  }
+
+  setAmountWarning(false);
+  setForm((prev) => ({
+    ...prev,
+    amount: rawValue,
+  }));
+};
+
+const saveNotification = (newReimbursement: Reimbursement) => {
+  const saved = JSON.parse(localStorage.getItem(NOTIFICATION_KEY) || "[]");
+
+  const newNotification = {
+    id: `N-${Date.now()}`,
+    type: "reimbursement",
+    title: "Pengajuan Reimbursement Baru",
+    message: `Pengajuan reimbursement baru dari ${
+      newReimbursement.employeeName
+    }/${newReimbursement.department} sebesar ${formatRupiah(
+      newReimbursement.amount
+    )}.`,
+    targetRoles: ["Admin", "HRD", "HR", "Director", "Finance", "Accounting"],
+    isRead: false,
+    link: "/reimbursement",
+    createdAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(
+    NOTIFICATION_KEY,
+    JSON.stringify([newNotification, ...saved])
+  );
+};
+
+const handleSubmitReimbursement = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const amount = Number(form.amount);
+
+  if (!form.date || !form.category || !form.amount || !form.description) {
+    alert("Harap isi semua field wajib.");
+    return;
+  }
+
+  if (amount > MAX_REIMBURSE_AMOUNT) {
+    setAmountWarning(true);
+    return;
+  }
+
+  if (form.date > today) {
+    alert("Tanggal pengajuan tidak boleh melebihi hari ini.");
+    return;
+  }
+
+  const newReimbursement: Reimbursement = {
+    id: `R-${Date.now()}`,
+    employeeId: currentUser.employeeId || currentUser.id || `EMP-${Date.now()}`,
+    employeeName: currentUser.name || "Karyawan",
+    department: currentUser.department || currentUser.role || "Karyawan",
+    date: form.date,
+    category: form.category,
+    amount,
+    description: form.description,
+    status: "Pending",
+    paymentStatus: "Belum Dibayar",
+  };
+
+  const updatedData = [newReimbursement, ...reimbursements];
+
+  setReimbursements(updatedData);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+  saveNotification(newReimbursement);
+
+  setShowForm(false);
+  setAmountWarning(false);
+  setForm({
+    date: today,
+    category: "Transport",
+    amount: "",
+    description: "",
+  });
+};
+
   if (isManagementRole(currentUser.role)) {
     return (
       <div className="p-6">
@@ -254,6 +380,139 @@ const filterLabel = useMemo(() => {
           Lihat pengajuan reimbursement milik anda atau divisi anda.
         </p>
       </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+  <div className="flex items-center justify-between gap-3 mb-4">
+    <div>
+      <h2 className="text-lg font-bold text-gray-900">
+        Ajukan Reimburse
+      </h2>
+      <p className="text-sm text-gray-500">
+        Buat pengajuan reimbursement baru.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => setShowForm((prev) => !prev)}
+      className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+    >
+      {showForm ? (
+        "Tutup"
+      ) : (
+        <span className="inline-flex items-center gap-2">
+          <Plus size={16} />
+          Ajukan
+        </span>
+      )}
+    </button>
+  </div>
+
+  {showForm && (
+    <form
+      onSubmit={handleSubmitReimbursement}
+      className="grid grid-cols-1 md:grid-cols-4 gap-4"
+    >
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Tanggal
+        </label>
+        <input
+          type="date"
+          max={today}
+          value={form.date}
+          onChange={(e) =>
+            setForm((prev) => ({
+              ...prev,
+              date: e.target.value,
+            }))
+          }
+          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Kategori
+        </label>
+        <select
+          value={form.category}
+          onChange={(e) =>
+            setForm((prev) => ({
+              ...prev,
+              category: e.target.value,
+            }))
+          }
+          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-500"
+          required
+        >
+          <option value="Transport">Transport</option>
+          <option value="Makan">Makan</option>
+          <option value="Peralatan">Peralatan</option>
+          <option value="Perjalanan Dinas">Perjalanan Dinas</option>
+          <option value="Kesehatan">Kesehatan</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Jumlah
+        </label>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={form.amount}
+          onChange={handleAmountChange}
+          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-500"
+          required
+        />
+
+        {amountWarning && (
+          <p className="mt-1 text-xs font-medium text-red-600">
+            Anda telah mencapai batas nominal
+          </p>
+        )}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Keterangan
+        </label>
+        <input
+          type="text"
+          value={form.description}
+          onChange={(e) =>
+            setForm((prev) => ({
+              ...prev,
+              description: e.target.value,
+            }))
+          }
+          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-red-500"
+          required
+        />
+      </div>
+
+      <div className="md:col-span-4 flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setShowForm(false)}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+        >
+          Batal
+        </button>
+
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+        >
+          Simpan Pengajuan
+        </button>
+      </div>
+    </form>
+  )}
+</div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
         <div className="flex items-start justify-between gap-3 mb-4">
@@ -346,7 +605,7 @@ const filterLabel = useMemo(() => {
         />
         <SummaryCard
           title="Total Pending"
-          value={String(summary.pending)}
+          value={formatRupiah(summary.pending)}
           icon={<Calendar size={20} />}
           filterLabel={filterLabel}
           color="yellow"
