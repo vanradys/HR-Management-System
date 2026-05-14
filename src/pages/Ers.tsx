@@ -119,6 +119,21 @@ function isManagementRole(role: string) {
 }
 
 export default function EmployeeReimbursement() {
+  const currentUser = JSON.parse(
+    localStorage.getItem("hrptaa_auth_user") || "{}"
+  );
+
+const blockedRoles = [
+  "Admin",
+  "Director",
+  "HR",
+  "Finance",
+];
+
+if (blockedRoles.includes(currentUser.role)) {
+  window.location.href = "/reimbursement";
+  return null;
+}
   const currentDate = new Date();
 
   const [month, setMonth] = useState(
@@ -157,46 +172,61 @@ export default function EmployeeReimbursement() {
   }, [allowedData, month, year, startDate, endDate]);
 
   const summary = useMemo(() => {
-    const filterLabel = useMemo(() => {
-    const monthNames = [
-      "Januari",
-      "Februari",
-      "Maret",
-      "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
-      "September",
-      "Oktober",
-      "November",
-      "Desember",
-    ];
+  return {
+    total: filteredData.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    ),
 
-    if (startDate && endDate) {
-      return `Periode ${formatDate(startDate)} - ${formatDate(endDate)}`;
-    }
+    approved: filteredData
+      .filter((item) => item.status === "Disetujui")
+      .reduce((sum, item) => sum + item.amount, 0),
 
-    if (month && year) {
-      return `Bulan ${monthNames[Number(month) - 1]} ${year}`;
-    }
+    pending: filteredData
+      .filter((item) => item.status === "Pending")
+      .reduce((sum, item) => sum + item.amount, 0),
 
+    paid: filteredData
+      .filter(
+        (item) =>
+          item.paymentStatus === "Sudah Dibayar"
+      )
+      .reduce((sum, item) => sum + item.amount, 0),
+  };
+}, [filteredData]);
+
+const filterLabel = useMemo(() => {
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  if (startDate && endDate) {
+    return `Periode ${formatDate(
+      startDate
+    )} - ${formatDate(endDate)}`;
+  }
+
+  if (month && year) {
     return `Bulan ${
-      monthNames[new Date().getMonth()]
-    } ${new Date().getFullYear()}`;
-  }, [month, year, startDate, endDate]);
-    return {
-      total: filteredData.reduce((sum, item) => sum + item.amount, 0),
-      approved: filteredData
-        .filter((item) => item.status === "Disetujui")
-        .reduce((sum, item) => sum + item.amount, 0),
-      pending: filteredData
-        .filter((item) => item.status === "Pending")
-        .reduce((sum, item) => sum + item.amount, 0),      paid: filteredData
-        .filter((item) => item.paymentStatus === "Sudah Dibayar")
-        .reduce((sum, item) => sum + item.amount, 0),
-    };
-  }, [filteredData]);
+      monthNames[Number(month) - 1]
+    } ${year}`;
+  }
+
+  return `Bulan ${
+    monthNames[new Date().getMonth()]
+  } ${new Date().getFullYear()}`;
+}, [month, year, startDate, endDate]);
 
   if (isManagementRole(currentUser.role)) {
     return (
@@ -304,28 +334,28 @@ export default function EmployeeReimbursement() {
           title="Total Reimbursement"
           value={formatRupiah(summary.total)}
           icon={<FileText size={20} />}
-          filterLabel="{filterLabel}"
+          filterLabel={filterLabel}
           color="red"
         />
         <SummaryCard
           title="Total Disetujui"
           value={formatRupiah(summary.approved)}
           icon={<CheckIcon />}
-          filterLabel="{filterLabel}"
+          filterLabel={filterLabel}
           color="green"
         />
         <SummaryCard
           title="Total Pending"
           value={String(summary.pending)}
           icon={<Calendar size={20} />}
-          filterLabel="{filterLabel}"
+          filterLabel={filterLabel}
           color="yellow"
         />
         <SummaryCard
           title="Total Sudah Dibayar"
           value={formatRupiah(summary.paid)}
           icon={<CreditCard size={20} />}
-          filterLabel="{filterLabel}"
+          filterLabel={filterLabel}
           color="blue"
         />
       </div>

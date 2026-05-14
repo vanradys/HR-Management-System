@@ -80,13 +80,13 @@ function AppRouter() {
         <Route path="/shift" component={Shift} />
         <Route path="/cuti-izin" component={CutiIzin} />
         <Route path="/lembur" component={Lembur} />
-        <Route path="/reimbursement" component={Reimbursement} />
-        <Route path="/employee-reimbursement" component={EmployeeReimbursement} />
+        <Route path="/reimbursement" component={Reimbursement} /> {!["Admin", "Director", "Finance", "HR"].includes(auth.role) && (
+        <Route path="/employee-reimbursement" component={EmployeeReimbursement} /> )}
         <Route path="/laporan" component={Laporan} />
         <Route path="/pengumuman" component={Pengumuman} />
         <Route path="/notifikasi" component={Notifikasi} />
         <Route path="/payroll" component={Payroll} />
-        <Route path="/pengaturan" component={Pengaturan} />
+        {auth.role === 'Admin' && <Route path="/pengaturan" component={Pengaturan} />}
         <Route path="/laporan-harian" component={LaporanHarian} />
         <Route path="/chat" component={Chat} />
         <Route component={NotFound} />
