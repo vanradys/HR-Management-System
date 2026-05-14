@@ -21,15 +21,15 @@ export const canManageShift = (role: string) =>
 
 // Cek apakah role boleh approve cuti/lembur.
 export const canApproveRequest = (role: string) =>
-  ["Admin", "Director"].includes(role);
+  ["Admin", "Director", "HR", "HRD", "Finance"].includes(role);
 
 // Cek apakah role boleh approve reimbursement.
 export const canApproveReimbursement = (role: string) =>
-  ["Admin", "Director", "Finance"].includes(role);
+  ["Admin", "Director", "HR", "HRD", "Finance", "Accounting"].includes(role);
 
 // Cek apakah role boleh melihat semua reimbursement.
 export const canViewAllReimbursements = (role: string) =>
-  ["Admin", "Director", "Finance"].includes(role);
+  ["Admin", "Director", "HR", "HRD", "Finance", "Accounting"].includes(role);
 
 // Cek apakah role boleh mengelola pengumuman.
 export const canManageAnnouncement = (role: string) =>

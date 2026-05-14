@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Calendar, CreditCard, FileText, Plus, Search } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 
@@ -73,9 +74,12 @@ function isManagementRole(role?: string) {
 }
 
     export default function EmployeeReimbursement() {
-      const currentUser = JSON.parse(
-        localStorage.getItem("hrptaa_auth_user") || "{}"
-      );
+      const { auth } = useAuth();
+      const currentUser = {
+        ...auth,
+        employeeId: auth.userId,
+        department: auth.role || "Karyawan",
+      };
 
     const blockedRoles = [
       "Admin",
@@ -123,22 +127,12 @@ function isManagementRole(role?: string) {
   const [endDate, setEndDate] = useState("");
 
   const allowedData = useMemo(() => {
-  if (isManagementRole(currentUser.role)) return [];
+    if (isManagementRole(currentUser.role)) return [];
 
-  return reimbursements.filter(
-    (item) =>
-      item.employeeId === currentUser.employeeId ||
-      item.employeeId === currentUser.id ||
-      item.department === currentUser.department ||
-      item.department === currentUser.role
-  );
-}, [
-  reimbursements,
-  currentUser.employeeId,
-  currentUser.id,
-  currentUser.department,
-  currentUser.role,
-]);
+    return reimbursements.filter(
+      (item) => item.employeeId === currentUser.employeeId
+    );
+  }, [reimbursements, currentUser.employeeId, currentUser.role]);
 
   const filteredData = useMemo(() => {
     return allowedData.filter((item) => {
@@ -278,7 +272,7 @@ const handleSubmitReimbursement = (e: React.FormEvent<HTMLFormElement>) => {
 
   const newReimbursement: Reimbursement = {
     id: `R-${Date.now()}`,
-    employeeId: currentUser.employeeId || currentUser.id || `EMP-${Date.now()}`,
+    employeeId: currentUser.employeeId || `EMP-${Date.now()}`,
     employeeName: currentUser.name || "Karyawan",
     department: currentUser.department || currentUser.role || "Karyawan",
     date: form.date,

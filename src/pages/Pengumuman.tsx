@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, X, Megaphone, Calendar, Search } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { Announcement } from '@/types/types';
 import { SEED_ANNOUNCEMENTS } from '@/data/seedData';
@@ -9,8 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Pengumuman() {
   const { toast } = useToast();
+  const { auth } = useAuth();
+  const canPublish = ['Admin', 'Director', 'HR'].includes(auth.role);
   const [announcements, setAnnouncements] = useLocalStorage<Announcement[]>('hrptaa_announcements', SEED_ANNOUNCEMENTS);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [form, setForm] = useState({
     title: '', content: '', priority: 'Normal' as 'Tinggi' | 'Normal' | 'Rendah',
@@ -57,14 +61,16 @@ export default function Pengumuman() {
           <h2 className="text-lg font-bold text-gray-900">Pengumuman</h2>
           <p className="text-sm text-gray-500">{announcements.length} pengumuman aktif</p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90"
-          style={{ backgroundColor: '#E30613' }}
-          data-testid="button-buat-pengumuman"
-        >
-          <Plus className="w-4 h-4" /> Buat Pengumuman
-        </button>
+        {canPublish && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90"
+            style={{ backgroundColor: '#E30613' }}
+            data-testid="button-buat-pengumuman"
+          >
+            <Plus className="w-4 h-4" /> Buat Pengumuman
+          </button>
+        )}
       </div>
       {/* Search bar */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
@@ -91,7 +97,8 @@ export default function Pengumuman() {
         ) : filteredAnnouncements.map(ann => (
           <div
             key={ann.id}
-            className={`bg-white rounded-xl border border-gray-100 shadow-sm p-5 ${priorityBg[ann.priority] || ''}`}
+            onClick={() => setSelectedAnnouncement(ann)}
+            className={`cursor-pointer bg-white rounded-xl border border-gray-100 shadow-sm p-5 ${priorityBg[ann.priority] || ''}`}
             data-testid={`card-ann-${ann.id}`}
           >
             <div className="flex items-start justify-between gap-3">
@@ -124,6 +131,27 @@ export default function Pengumuman() {
       </div>
 
       {/* Modal */}
+      {selectedAnnouncement && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{selectedAnnouncement.title}</h3>
+                <p className="text-xs text-gray-500">Dipublikasikan: {formatDate(selectedAnnouncement.publishDate)} · Oleh: {selectedAnnouncement.authorName}</p>
+              </div>
+              <button onClick={() => setSelectedAnnouncement(null)} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-blue-600" />
+                <span className="text-xs uppercase tracking-[0.2em] text-blue-700">{selectedAnnouncement.priority}</span>
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{selectedAnnouncement.content}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">

@@ -7,7 +7,7 @@ import type { ReimbursementRequest } from '@/types/types';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, formatCurrency } from '@/utils/helpers';
-import { canApproveReimbursement } from '@/utils/permissions';
+import { canApproveReimbursement, canViewAllReimbursements } from '@/utils/permissions';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Reimbursement() {
@@ -23,7 +23,12 @@ export default function Reimbursement() {
     endDate: '',
   });
 
-  const filteredReimbursements = reimbursements.filter(r => {
+  const canViewAll = canViewAllReimbursements(auth.role);
+  const visibleReimbursements = canViewAll
+    ? reimbursements
+    : reimbursements.filter(r => r.employeeId === auth.userId);
+
+  const filteredReimbursements = visibleReimbursements.filter(r => {
     const d = new Date(r.date);
 
     return (
@@ -210,7 +215,7 @@ export default function Reimbursement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                {['Karyawan', 'Tanggal', 'Kategori', 'Jumlah', 'Keterangan', 'Status', 'Pembayaran', 'Aksi'].map(h => (
+                {['Karyawan', 'Tanggal', 'Kategori', 'Jumlah', 'Keterangan', 'Status', 'Pembayaran', ...(canApprove ? ['Aksi'] : [])].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -232,19 +237,21 @@ export default function Reimbursement() {
                   <td className="px-4 py-3 text-gray-600 text-xs max-w-40 truncate" title={r.description}>{r.description}</td>
                   <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                   <td className="px-4 py-3"><StatusBadge status={r.paymentStatus} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      {r.status === 'Pending' && canApprove && (
-                        <>
-                          <button onClick={() => handleApprove(r.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Setujui" data-testid={`button-approve-reimb-${r.id}`}><Check className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleReject(r.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Tolak" data-testid={`button-reject-reimb-${r.id}`}><XCircle className="w-3.5 h-3.5" /></button>
-                        </>
-                      )}
-                      {r.status === 'Disetujui' && r.paymentStatus === 'Belum Dibayar' && (
-                        <button onClick={() => handleMarkPaid(r.id)} className="px-2 py-1 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200" data-testid={`button-bayar-${r.id}`}>Bayar</button>
-                      )}
-                    </div>
-                  </td>
+                  {canApprove && (
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        {r.status === 'Pending' && (
+                          <>
+                            <button onClick={() => handleApprove(r.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Setujui" data-testid={`button-approve-reimb-${r.id}`}><Check className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => handleReject(r.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Tolak" data-testid={`button-reject-reimb-${r.id}`}><XCircle className="w-3.5 h-3.5" /></button>
+                          </>
+                        )}
+                        {r.status === 'Disetujui' && r.paymentStatus === 'Belum Dibayar' && (
+                          <button onClick={() => handleMarkPaid(r.id)} className="px-2 py-1 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200" data-testid={`button-bayar-${r.id}`}>Bayar</button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

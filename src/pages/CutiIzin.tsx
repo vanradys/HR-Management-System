@@ -23,16 +23,31 @@ export default function CutiIzin() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ type: 'Cuti' as 'Cuti' | 'Izin' | 'Sakit', startDate: '', endDate: '', reason: '' });
 
+  const visibleLeaves = canManageAction ? leaves : leaves.filter(l => l.employeeId === auth.userId || l.employeeName === auth.name);
+
+  function countLeaveDays(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.max(0, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  }
+
+  const approvedCutiDays = visibleLeaves
+    .filter(l => l.type === 'Cuti' && l.status === 'Disetujui')
+    .reduce((sum, req) => sum + countLeaveDays(req.startDate, req.endDate), 0);
+
+  const leaveAllowance = 12;
+  const leaveRemaining = Math.max(0, leaveAllowance - approvedCutiDays);
+
   const counts = useMemo(() => ({
-    Pending: leaves.filter(l => l.status === 'Pending').length,
-    Disetujui: leaves.filter(l => l.status === 'Disetujui').length,
-    Ditolak: leaves.filter(l => l.status === 'Ditolak').length,
-  }), [leaves]);
+    Pending: visibleLeaves.filter(l => l.status === 'Pending').length,
+    Disetujui: visibleLeaves.filter(l => l.status === 'Disetujui').length,
+    Ditolak: visibleLeaves.filter(l => l.status === 'Ditolak').length,
+  }), [visibleLeaves]);
 
   const filtered = useMemo(() => {
-    if (filter === 'Semua') return leaves;
-    return leaves.filter(l => l.status === filter);
-  }, [leaves, filter]);
+    if (filter === 'Semua') return visibleLeaves;
+    return visibleLeaves.filter(l => l.status === filter);
+  }, [visibleLeaves, filter]);
 
   function handleSubmit() {
     if (!form.startDate || !form.endDate || !form.reason) {
@@ -40,7 +55,7 @@ export default function CutiIzin() {
       return;
     }
     const newReq: LeaveRequest = {
-      id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
+      id: generateId(), employeeId: auth.userId || 'EMP001', employeeName: auth.name || 'Administrator',
       type: form.type, startDate: form.startDate, endDate: form.endDate,
       reason: form.reason, status: 'Pending', submittedAt: getCurrentDatetime(),
     };
@@ -92,6 +107,13 @@ export default function CutiIzin() {
           </div>
         ))}
       </div>
+
+      {!canManageAction && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+          <p className="font-semibold">Sisa waktu cuti</p>
+          <p className="mt-1">Anda memiliki <span className="font-bold">{leaveRemaining} hari</span> cuti tersisa dari kuota {leaveAllowance} hari.</p>
+        </div>
+      )}
 
       {/* Filter chips */}
       <div className="flex gap-2 flex-wrap">

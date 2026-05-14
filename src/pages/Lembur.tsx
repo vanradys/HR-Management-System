@@ -20,11 +20,15 @@ export default function Lembur() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ date: '', startTime: '17:00', endTime: '20:00', reason: '' });
 
+  const visibleOvertime = canManageAction
+    ? overtime
+    : overtime.filter(o => o.employeeId === auth.userId || o.employeeName === auth.name);
+
   const stats = useMemo(() => ({
-    pending: overtime.filter(o => o.status === 'Pending').length,
-    disetujui: overtime.filter(o => o.status === 'Disetujui').length,
-    totalJam: overtime.filter(o => o.status === 'Disetujui').reduce((s, o) => s + o.totalHours, 0),
-  }), [overtime]);
+    pending: visibleOvertime.filter(o => o.status === 'Pending').length,
+    disetujui: visibleOvertime.filter(o => o.status === 'Disetujui').length,
+    totalJam: visibleOvertime.filter(o => o.status === 'Disetujui').reduce((s, o) => s + o.totalHours, 0),
+  }), [visibleOvertime]);
 
   function handleSubmit() {
     if (!form.date || !form.startTime || !form.endTime || !form.reason) {
@@ -33,7 +37,7 @@ export default function Lembur() {
     }
     const totalHours = calculateHours(form.startTime, form.endTime);
     const newReq: OvertimeRequest = {
-      id: generateId(), employeeId: 'EMP001', employeeName: 'Administrator',
+      id: generateId(), employeeId: auth.userId || 'EMP001', employeeName: auth.name || 'Administrator',
       date: form.date, startTime: form.startTime, endTime: form.endTime,
       totalHours, reason: form.reason, status: 'Pending', submittedAt: getCurrentDatetime(),
     };
@@ -90,9 +94,9 @@ export default function Lembur() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {overtime.length === 0 ? (
+              {visibleOvertime.length === 0 ? (
                 <tr><td colSpan={canManageAction ? 8 : 7} className="text-center py-10 text-gray-400">Tidak ada data lembur</td></tr>
-              ) : overtime.map(ot => (
+              ) : visibleOvertime.map(ot => (
                 <tr key={ot.id} className="hover:bg-gray-50 transition-colors" data-testid={`row-lembur-${ot.id}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
