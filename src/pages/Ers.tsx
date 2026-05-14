@@ -39,56 +39,7 @@ type Reimbursement = {
   paymentStatus: PaymentStatus;
 };
 
-const SEED_REIMBURSEMENTS: Reimbursement[] = [
-  {
-    id: "R001",
-    employeeId: "EMP002",
-    employeeName: "Hendra Gunawan",
-    department: "Purchasing",
-    date: "2026-05-09",
-    category: "Makan",
-    amount: 175000,
-    description: "Makan siang rapat client",
-    status: "Disetujui",
-    paymentStatus: "Belum Dibayar",
-  },
-  {
-    id: "R002",
-    employeeId: "EMP002",
-    employeeName: "Hendra Gunawan",
-    department: "Purchasing",
-    date: "2026-05-11",
-    category: "Transport",
-    amount: 250000,
-    description: "Transport meeting vendor",
-    status: "Pending",
-    paymentStatus: "Belum Dibayar",
-  },
-  {
-    id: "R003",
-    employeeId: "EMP011",
-    employeeName: "Dika Saputra",
-    department: "Purchasing",
-    date: "2026-05-13",
-    category: "Peralatan",
-    amount: 450000,
-    description: "Pembelian perlengkapan kerja purchasing",
-    status: "Disetujui",
-    paymentStatus: "Sudah Dibayar",
-  },
-  {
-    id: "R004",
-    employeeId: "EMP021",
-    employeeName: "Andi Kusuma",
-    department: "Engineering",
-    date: "2026-05-07",
-    category: "Peralatan",
-    amount: 850000,
-    description: "Pembelian keyboard mekanikal engineering",
-    status: "Pending",
-    paymentStatus: "Belum Dibayar",
-  },
-];
+const SEED_REIMBURSEMENTS: Reimbursement[] = [];
 const STORAGE_KEY = "hrptaa_reimbursements";
 const NOTIFICATION_KEY = "hrptaa_notifications";
 const MAX_REIMBURSE_AMOUNT = 100000000;

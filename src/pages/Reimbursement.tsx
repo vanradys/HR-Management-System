@@ -3,7 +3,6 @@ import { Check, XCircle } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { ReimbursementRequest } from '@/types/types';
-import { SEED_REIMBURSEMENTS } from '@/data/seedData';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { formatDate, formatCurrency } from '@/utils/helpers';
@@ -12,8 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function Reimbursement() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const [reimbursements, setReimbursements] = useLocalStorage<ReimbursementRequest[]>('hrptaa_reimbursements', SEED_REIMBURSEMENTS);
-  
+  const [reimbursements, setReimbursements] = useLocalStorage<ReimbursementRequest[]>(  'hrptaa_reimbursements',  [] );  
   const [filter, setFilter] = useState({
     month: '',
     year: '',
