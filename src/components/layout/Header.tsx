@@ -1,4 +1,5 @@
-import { Bell, ChevronDown, LogOut, Settings,} from 'lucide-react';
+import { useState, type ChangeEvent } from 'react';
+import { Bell, ChevronDown, LogOut, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,12 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmployeeAvatar } from '@/components/shared/EmployeeAvatar';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { MobileMenuButton } from './Sidebar';
 import { useLocation } from 'wouter';
 import type { AuthState } from '@/types/types';
-import { canAccessSettings } from '@/utils/permissions';
 import { useNotifications } from '@/hooks/useNotifications';
 import {
   Popover,
@@ -50,6 +51,18 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
     notifications,
     markRead,
   } = useNotifications();
+
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [departmentEmail, setDepartmentEmail] = useState(auth.email);
+  const [profilePhoto, setProfilePhoto] = useState<string>('');
+  const [joinDate] = useState('01-01-2024');
+
+  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setProfilePhoto(URL.createObjectURL(file));
+  };
 
   const title = Object.entries(PAGE_TITLES).find(([path]) => {
     if (path === '/') return location === '/';
@@ -166,16 +179,10 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => {
-                if (canAccessSettings(auth.role)) {
-                  navigate('/pengaturan');
-                } else {
-                  alert('Pengaturan hanya bisa diakses oleh Admin.');
-                }
-              }}
+              onClick={() => setShowEditProfile(true)}
             >
               <Settings className="w-4 h-4 mr-2" />
-              Pengaturan
+              Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -188,6 +195,96 @@ export function Header({ auth, unreadCount, onLogout, onOpenSidebar }: HeaderPro
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+              <DialogDescription>
+                Perbarui profil Anda, termasuk foto profil dan email departemen.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nama</label>
+                <input
+                  type="text"
+                  value={auth.name}
+                  disabled
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Foto Profile</label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {profilePhoto ? (
+                      <img
+                        src={profilePhoto}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <EmployeeAvatar name={auth.name || 'Admin'} size="md" />
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="text-sm text-gray-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <input
+                  type="text"
+                  value={auth.role}
+                  disabled
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email Departemen</label>
+                <input
+                  type="email"
+                  value={departmentEmail}
+                  onChange={(e) => setDepartmentEmail(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Karyawan sejak</label>
+                <p className="mt-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  {joinDate}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="mt-4">
+              <button
+                type="button"
+                onClick={() => setShowEditProfile(false)}
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEditProfile(false)}
+                className="rounded-xl bg-[#001E8A] px-4 py-2 text-sm font-medium text-white hover:bg-[#00166b]"
+              >
+                Simpan
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </header>
   );

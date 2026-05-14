@@ -75,7 +75,7 @@ export default function Login({ onLogin }: LoginProps) {
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-10" style={{ backgroundColor: '#ffffff' }} />
 
         <div className="relative z-10">
-          <div id="logo-area" className="flex flex-col items-center gap-5">
+          <div id="logo-area" className="flex flex-col items-center gap-3">
             <div className="text-white font-black text-3xl tracking-widest leading-none">ADIYASA</div>
             <div className="text-sm font-bold tracking-widest" style={{ color: '#E30613' }}>HR PTAA</div>
             <img src={logoSrc} alt="Adiyasa logo" className="w-72 h-72 object-contain mx-auto" />
@@ -83,7 +83,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
         <div className="relative z-10">
-          <div className="w-12 h-1 mb-6" style={{ backgroundColor: '#E30613' }} />
+          <div className="w-12 h-1 mb-4" style={{ backgroundColor: '#E30613' }} />
           <h2 className="text-2xl font-bold text-white leading-snug mb-3">
             Sistem Manajemen SDM<br />PT Adiyasa Abadi
           </h2>
