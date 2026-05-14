@@ -16,8 +16,8 @@ type FilterType = 'Semua' | 'Pending' | 'Disetujui' | 'Ditolak';
 export default function CutiIzin() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const { user } = useAuth();
-  const canManageAction = canApproveRequest(user.role);
+  const { auth } = useAuth();
+  const canManageAction = canApproveRequest(auth.role);
   const [leaves, setLeaves] = useLocalStorage<LeaveRequest[]>('hrptaa_leaves', SEED_LEAVES);
   const [filter, setFilter] = useState<FilterType>('Semua');
   const [modalOpen, setModalOpen] = useState(false);

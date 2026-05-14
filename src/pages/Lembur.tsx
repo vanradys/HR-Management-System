@@ -14,8 +14,8 @@ import { canApproveRequest } from '@/utils/permissions';
 export default function Lembur() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const { user } = useAuth();
-  const canManageAction = canApproveRequest(user.role);
+  const { auth } = useAuth();
+  const canManageAction = canApproveRequest(auth.role);
   const [overtime, setOvertime] = useLocalStorage<OvertimeRequest[]>('hrptaa_overtime', SEED_OVERTIME);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ date: '', startTime: '17:00', endTime: '20:00', reason: '' });
