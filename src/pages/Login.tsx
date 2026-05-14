@@ -78,7 +78,7 @@ export default function Login({ onLogin }: LoginProps) {
           <div id="logo-area" className="flex flex-col items-center gap-5">
             <div className="text-white font-black text-3xl tracking-widest leading-none">ADIYASA</div>
             <div className="text-sm font-bold tracking-widest" style={{ color: '#E30613' }}>HR PTAA</div>
-            <img src={logoSrc} alt="Adiyasa logo" className="w-40 h-40 object-contain" />
+            <img src={logoSrc} alt="Adiyasa logo" className="w-56 h-56 object-contain" />
           </div>
         </div>
 
