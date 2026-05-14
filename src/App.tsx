@@ -14,7 +14,7 @@ import Shift from "@/pages/Shift";
 import CutiIzin from "@/pages/CutiIzin";
 import Lembur from "@/pages/Lembur";
 import Reimbursement from "@/pages/Reimbursement";
-import EmployeeReimbursement from "@/pages/EmployeeReimbursement";
+import EmployeeReimbursement from "@/pages/Ers";
 import Laporan from "@/pages/Laporan";
 import Pengumuman from "@/pages/Pengumuman";
 import Notifikasi from "@/pages/Notifikasi";

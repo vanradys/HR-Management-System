@@ -410,17 +410,29 @@ function SummaryCard({
 }) {
 
   const styles = {
-    red: "bg-red-50 border-red-200 text-red-700",
-    green: "bg-green-50 border-green-200 text-green-700",
-    yellow: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    blue: "bg-blue-50 border-blue-200 text-blue-700",
+    red: "bg-white border-gray-200 text-gray-900",
+    green: "bg-white border-gray-200 text-gray-900",
+    yellow: "bg-white border-gray-200 text-gray-900",
+    blue: "bg-white border-gray-200 text-gray-900",
   };
 
   return (
     <div className={`rounded-2xl border p-5 ${styles[color]}`}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold opacity-80">{title}</p>
-        {icon}
+        <div
+  className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+    color === "red"
+      ? "bg-red-100 text-red-600"
+      : color === "green"
+      ? "bg-green-100 text-green-600"
+      : color === "yellow"
+      ? "bg-yellow-100 text-yellow-600"
+      : "bg-blue-100 text-blue-600"
+  }`}
+>
+  {icon}
+</div>
       </div>
       <p className="mt-3 text-2xl font-extrabold">{value}</p>
 
