@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
-import { Search, Send, Megaphone, Users, MoreVertical } from "lucide-react";
+import {
+  Search,
+  Send,
+  Megaphone,
+  Users,
+  MoreVertical,
+  X,
+  ArrowLeft,
+} from "lucide-react";
 
-const users = [
-  { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2 },
-  { name: "Dika", status: "Online", color: "bg-green-500", unread: 1 },
-  { name: "Sakti", status: "Offline", color: "bg-gray-400", unread: 0 },
-  { name: "Nanda", status: "Online", color: "bg-green-500", unread: 0 },
-  { name: "Rizky", status: "Online", color: "bg-green-500", unread: 0 },
+const initialUsers = [
+  { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2, favorite: false },
+  { name: "Dika", status: "Online", color: "bg-green-500", unread: 1, favorite: false },
+  { name: "Sakti", status: "Offline", color: "bg-gray-400", unread: 0, favorite: false },
+  { name: "Nanda", status: "Online", color: "bg-green-500", unread: 0, favorite: false },
+  { name: "Rizky", status: "Online", color: "bg-green-500", unread: 0, favorite: false },
 ];
 
 type RoomType = "private" | "group" | "announcement";
@@ -18,13 +26,56 @@ type Message = {
   text: string;
   time: string;
 };
+type ChatGroup = {
+  id: string;
+  name: string;
+  members: string[];
+  unread: number;
+  favorite: boolean;
+};
 
 export default function Chat() {
   const [message, setMessage] = useState("");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [searchUser, setSearchUser] = useState("");
   const [activeRoom, setActiveRoom] = useState<RoomType>("private");
-  const [selectedUser, setSelectedUser] = useState(users[0]);
+  const [selectedGroupId, setSelectedGroupId] = useState("group");
+  const [chatFilter, setChatFilter] = useState<
+  "all" | "unread" | "favorites" | "groups"
+  >("all");
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const [showContactsModal, setShowContactsModal] = useState(false);
+  const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showEmptyScreen, setShowEmptyScreen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [groups, setGroups] = useState<ChatGroup[]>(() => {
+  const savedGroups = localStorage.getItem("chat-groups");
 
+  return savedGroups
+    ? JSON.parse(savedGroups)
+    : [
+        {
+          id: "group",
+          name: "Group Divisi",
+          members: ["Hafidz", "Dika", "Sakti"],
+          unread: 0,
+          favorite: false,
+        },
+      ];
+});
+  const [chatUsers, setChatUsers] = useState(() => {
+  const savedUsers = localStorage.getItem("chat-users");
+
+  return savedUsers
+    ? JSON.parse(savedUsers)
+    : initialUsers;
+});
+const [activeChatNames, setActiveChatNames] = useState<string[]>([
+  "Hafidz",
+  "Dika",
+]);
+  const [selectedUser, setSelectedUser] = useState(initialUsers[0]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -57,54 +108,169 @@ export default function Chat() {
   ]);
 
   useEffect(() => {
-    const savedMessages = localStorage.getItem("chat-messages");
+  const savedMessages = localStorage.getItem("chat-messages");
+  const savedActiveUsers = localStorage.getItem("chat-active-users");
 
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
-  }, []);
+  if (savedMessages) {
+    setMessages(JSON.parse(savedMessages));
+  }
 
+
+
+  if (savedActiveUsers) {
+    setActiveChatNames(JSON.parse(savedActiveUsers));
+  }
+}, []);
+
+
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-active-users",
+    JSON.stringify(activeChatNames)
+  );
+}, [activeChatNames]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-users",
+    JSON.stringify(chatUsers)
+  );
+}, [chatUsers]);
+
+useEffect(() => {
+  localStorage.setItem(
+    "chat-groups",
+    JSON.stringify(groups)
+  );
+}, [groups]);
   useEffect(() => {
-    localStorage.setItem("chat-messages", JSON.stringify(messages));
-  }, [messages]);
+  const handleEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setShowEmptyScreen(true);
+      setMobileView("chat");
+    }
+  };
+
+  window.addEventListener("keydown", handleEsc);
+
+  return () => {
+    window.removeEventListener("keydown", handleEsc);
+  };
+}, []);
 
   const currentRoomId =
-    activeRoom === "private" ? selectedUser.name : activeRoom;
+  activeRoom === "private"
+    ? selectedUser.name
+    : activeRoom === "group"
+    ? selectedGroupId
+    : activeRoom;
 
   const visibleMessages = messages.filter(
     (msg) => msg.roomId === currentRoomId
   );
 
-  const sendMessage = () => {
-    if (!message.trim()) return;
+  const filteredGroups = groups.filter((group) => {
+  if (chatFilter === "groups") return true;
+  if (chatFilter === "unread") return group.unread > 0;
+  if (chatFilter === "favorites") return group.favorite;
 
-    const newMessage: Message = {
-      id: Date.now(),
-      roomId: currentRoomId,
-      sender: "me",
-      text: message,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+  return true;
+});
 
-    setMessages((prev) => [...prev, newMessage]);
-    setMessage("");
+const filteredUsers = chatUsers.filter((user) => {
+  const matchSearch = user.name
+    .toLowerCase()
+    .includes(searchUser.toLowerCase());
+
+  if (!matchSearch) return false;
+  
+  if (!activeChatNames.includes(user.name)) return false;
+
+  if (chatFilter === "groups") return false;
+  if (chatFilter === "unread") return user.unread > 0;
+  if (chatFilter === "favorites") return user.favorite === true;
+
+  return true;
+});
+
+const getLastMessage = (roomId: string) => {
+  const roomMessages = messages.filter(
+    (msg) => msg.roomId === roomId
+  );
+
+  return roomMessages[roomMessages.length - 1];
+};
+
+const sendMessage = () => {
+  if (!message.trim()) return;
+
+  const newMessage: Message = {
+    id: Date.now(),
+    roomId: currentRoomId,
+    sender: "me",
+    text: message,
+    time: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
   };
+
+  setMessages((prev) => [...prev, newMessage]);
+  setMessage("");
+};
+
+const createGroup = () => {
+  if (!newGroupName.trim()) return;
+
+  const newGroup: ChatGroup = {
+    id: `group-${Date.now()}`,
+    name: newGroupName,
+    members: selectedMembers,
+    unread: 0,
+    favorite: false,
+  };
+
+  setGroups((prev) => [...prev, newGroup]);
+  setNewGroupName("");
+  setSelectedMembers([]);
+  setShowNewGroupModal(false);
+  setSelectedGroupId(newGroup.id);
+  setActiveRoom("group");
+  setMobileView("chat");
+  setShowEmptyScreen(false);
+};
+
+
+
+const addChatToFavorites = () => {
+  if (activeRoom !== "private") return;
+
+  setChatUsers((prev) =>
+    prev.map((user) =>
+      user.name === selectedUser.name
+        ? { ...user, favorite: true }
+        : user
+    )
+  );
+};
+
+  const selectedGroup = groups.find(
+    (group) => group.id === selectedGroupId
+  );
 
   const headerTitle =
     activeRoom === "announcement"
       ? "Announcement"
       : activeRoom === "group"
-      ? "Group Divisi"
+      ? selectedGroup?.name || "Group"
       : selectedUser.name;
 
   const headerSubtitle =
     activeRoom === "announcement"
       ? "Pengumuman perusahaan"
       : activeRoom === "group"
-      ? "Engineering, Production, Accounting"
+      ? selectedGroup?.members.join(", ") || "Anggota grup"
       : selectedUser.status;
 
   const headerAvatar =
@@ -119,9 +285,16 @@ export default function Chat() {
 
   return (
     <div className="p-6 h-[calc(100vh-80px)] bg-gray-50">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-5 h-full">
         {/* Sidebar */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div
+          className={`bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden ${
+            mobileView === "chat"
+              ? "hidden md:block"
+              : "block"
+          }`}
+  
+        >
           <div className="p-4 border-b border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">Chat</h1>
             <p className="text-sm text-gray-500">
@@ -140,99 +313,240 @@ export default function Chat() {
             </div>
           </div>
 
-          <div className="p-3 space-y-2">
-            <button
-              onClick={() => setActiveRoom("announcement")}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                activeRoom === "announcement"
-                  ? "bg-red-50"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              <Megaphone className="w-5 h-5 text-red-500" />
+          <div className="flex items-center gap-2 mt-5 overflow-x-auto pb-3 px-1">
 
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  Announcement
-                </p>
-                <p className="text-xs text-gray-500">
-                  Pengumuman perusahaan
-                </p>
-              </div>
-            </button>
+            {[
+              { key: "all", label: "All" },
+              { key: "unread", label: "Unread" },
+              { key: "favorites", label: "Favorites" },
+              { key: "groups", label: "Groups" },
+              
+            ].map((tab) => (
+              
+              <button
+                key={tab.key}
+                onClick={() => {
+                  setShowChatMenu(false);
+                  setChatFilter(tab.key as any);
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap border ${
+                  chatFilter === tab.key
+                    ? "bg-[#001E8A] text-white border-[#001E8A]"
+                    : "bg-white text-gray-600 border-gray-200"
+                }`}
+              >
+                {tab.label}
+              </button>
 
-            <button
-              onClick={() => setActiveRoom("group")}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                activeRoom === "group" ? "bg-blue-50" : "hover:bg-gray-50"
-              }`}
-            >
-              <Users className="w-5 h-5 text-blue-500" />
+            ))}
 
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
-                  Group Divisi
-                </p>
-                <p className="text-xs text-gray-500">
-                  Engineering, Production, Accounting
-                </p>
-              </div>
-            </button>
+         
+          </div>
+
+
+          <div className="p-3 pt-5 space-y-2">
+            {chatFilter === "all" && (
+              <button
+                onClick={() => {
+                setShowChatMenu(false);
+                setActiveRoom("announcement");
+                setMobileView("chat");
+                setShowEmptyScreen(false);
+              }}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+                  activeRoom === "announcement"
+                    ? "bg-red-50"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <Megaphone className="w-5 h-5 text-red-500" />
+
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Announcement
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Pengumuman perusahaan
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {chatFilter === "all" && (
+  <button
+    onClick={() => {
+      setShowChatMenu(false);
+      setShowNewGroupModal(true);
+    }}
+    className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+  >
+    <Users className="w-5 h-5 text-blue-500" />
+
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        Grup Baru
+      </p>
+
+      <p className="text-xs text-gray-500">
+        Buat grup baru
+      </p>
+    </div>
+  </button>
+)}
+
+ {chatFilter === "all" && (
+  <button
+    onClick={() => {
+      setShowChatMenu(false);
+      setShowContactsModal(true);
+    }}
+    className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover:bg-gray-50"
+  >
+    <Users className="w-5 h-5 text-[#001E8A]" />
+
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        Kontak Internal
+      </p>
+
+      <p className="text-xs text-gray-500">
+        Daftar karyawan internal
+      </p>
+    </div>
+  </button>
+)}
 
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
-              {users
-                .filter((user) =>
-                  user.name.toLowerCase().includes(searchUser.toLowerCase())
-                )
-                .map((user, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setActiveRoom("private");
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
-                      activeRoom === "private" &&
-                      selectedUser.name === user.name
-                        ? "bg-blue-50"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
-                      {user.name.charAt(0)}
-                    </div>
+            {filteredGroups.map((group) => (
+  <button
+    key={group.id}
+    onClick={() => {
+      setShowChatMenu(false);
+      setActiveRoom("group");
+      setSelectedGroupId(group.id);
+      setMobileView("chat");
+      setShowEmptyScreen(false);
+    }}
+    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+      activeRoom === "group" &&
+      selectedGroupId === group.id
+        ? "bg-blue-50"
+        : "hover:bg-gray-50"
+    }`}
+  >
+    <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+      👥
+    </div>
 
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {user.name}
+    <div className="flex-1">
+      <p className="text-sm font-semibold text-gray-900">
+        {group.name}
+      </p>
+
+      <p className="text-xs text-gray-500">
+        {group.members.length} anggota
+      </p>
+    </div>
+
+    {group.unread > 0 && (
+      <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+        {group.unread}
+      </div>
+    )}
+  </button>
+))}
+              {chatFilter !== "groups" && (
+  <>
+              {filteredUsers.map((user, index) => {
+  const lastMessage = getLastMessage(user.name);
+  return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setShowChatMenu(false);
+                    setSelectedUser({ ...user, unread: 0 });
+                    setActiveRoom("private");
+                    setMobileView("chat");
+                    setShowEmptyScreen(false);
+
+                    setChatUsers((prev) =>
+                      prev.map((item) =>
+                        item.name === user.name
+                          ? { ...item, unread: 0 }
+                          : item
+                      )
+                    );
+                  }}
+
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left ${
+                    activeRoom === "private" &&
+                    selectedUser.name === user.name
+                      ? "bg-blue-50"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                    {user.name.charAt(0)}
+                  </div>
+
+                  <div className="flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.name}
+                    </p>
+                    {lastMessage && (
+                      <p className="text-[11px] text-gray-400 whitespace-nowrap">
+                        {lastMessage.time}
                       </p>
-
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span
-                          className={`w-2 h-2 rounded-full ${user.color}`}
-                        />
-                        <p className="text-xs text-gray-500">{user.status}</p>
-                      </div>
-                    </div>
-
-                    {user.unread > 0 && (
-                      <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                        {user.unread}
-                      </div>
                     )}
-                  </button>
-                ))}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 mt-0.5">
+
+                    <span
+                      className={`w-2 h-2 rounded-full ${user.color}`}
+                    />
+
+                    <p className="text-xs text-gray-500 truncate max-w-[160px]">
+                      {lastMessage?.text || user.status}
+                    </p>
+                  </div>
+                </div>
+
+                  {user.unread > 0 && (
+                    <div className="min-w-[22px] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                      {user.unread}
+                    </div>
+                  )}
+                </button>
+                  );
+                })}
+            </>
+          )}
             </div>
           </div>
         </div>
 
         {/* Chat Area */}
-<div className="lg:col-span-3 bg-white border border-gray-100 rounded-[28px] shadow-sm flex flex-col overflow-hidden">
+<div
+  className={`bg-white border border-gray-100 rounded-[28px] shadow-sm flex flex-col overflow-hidden ${
+    mobileView === "list"
+      ? "hidden md:flex"
+      : "flex"
+  }`}
+>
 
   {/* Header */}
   <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
-    
+
     <div className="flex items-center gap-3">
+  
+      <button
+      onClick={() => setMobileView("list")}
+      className="md:hidden w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700" />
+    </button>
 
       <div className="relative">
         <div className="w-12 h-12 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold text-lg">
@@ -255,89 +569,346 @@ export default function Chat() {
       </div>
     </div>
 
+    <div className="relative">
+  <button
+    onClick={() => setShowChatMenu((prev) => !prev)}
+    className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+  >
     <MoreVertical className="w-5 h-5 text-gray-400" />
-  </div>
+  </button>
 
-  {/* Messages */}
-  <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
-
-    <div className="space-y-5">
-
-      <div className="flex items-center gap-4">
-        <div className="h-px bg-gray-100 flex-1" />
-
-        <span className="text-xs text-gray-400">
-          Hari ini
-        </span>
-
-        <div className="h-px bg-gray-100 flex-1" />
-      </div>
-
-      {visibleMessages.map((msg) => {
-        const isMe = msg.sender === "me";
-
-        return (
-          <div
-            key={msg.id}
-            className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
-                isMe
-                  ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
-                  : "bg-gray-100 text-gray-800 rounded-[24px] rounded-bl-md"
-              }`}
-            >
-              <p className="leading-relaxed">
-                {msg.text}
-              </p>
-
-              <div
-                className={`mt-2 flex items-center justify-end gap-1 text-[10px] ${
-                  isMe ? "text-blue-100" : "text-gray-400"
-                }`}
-              >
-                <span>{msg.time}</span>
-
-                {isMe && <span>✓✓</span>}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-    </div>
-  </div>
-
-  {/* Input */}
-  <div className="px-5 py-4 border-t border-gray-100 bg-white">
-
-    <div className="flex items-center gap-3">
-
-      <input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            sendMessage();
-          }
-        }}
-        placeholder="Tulis pesan..."
-        className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-[#001E8A]"
+  {showChatMenu && (
+    <>
+      <button
+        type="button"
+        onClick={() => setShowChatMenu(false)}
+        className="fixed inset-0 z-40 cursor-default"
+        aria-label="Close chat menu"
       />
 
+      <div className="absolute right-0 top-11 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
+
+        <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
+          Chat Options
+        </p>
+
+        <button
+          onClick={() => {
+            if (activeRoom === "private") {
+              setChatUsers((prev) =>
+                prev.map((user) =>
+                  user.name === selectedUser.name
+                    ? {
+                        ...user,
+                        favorite: !user.favorite,
+                      }
+                    : user
+                )
+              );
+            }
+
+            setShowChatMenu(false);
+          }}
+          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+        >
+          {selectedUser.favorite
+            ? "Remove from Favorites"
+            : "Add to Favorites"}
+        </button>
+
+      </div>
+    </>
+  )}
+</div>
+</div>
+
+{showEmptyScreen ? (
+  <div className="flex-1 flex items-center justify-center bg-[#f8fafc] px-6">
+    <div className="w-full max-w-xl bg-white border border-gray-100 rounded-[32px] shadow-sm p-8">
+      <p className="text-sm font-semibold text-[#001E8A] mb-2">
+        Workspace
+      </p>
+
+      <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+        Hubungi Kontak Internal anda
+        <br />
+        atau lanjutkan pekerjaan
+      </h1>
+
+      <p className="text-gray-500 mt-3 leading-relaxed">
+        Kelola komunikasi internal perusahaan, cek ringkasan pekerjaan,
+        dan lanjutkan aktivitas harian anda.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <button className="rounded-2xl border border-gray-200 p-5 text-left hover:bg-gray-50 transition">
+          <p className="text-sm font-semibold text-gray-900">
+            To Do Lists
+          </p>
+
+          <p className="text-xs text-gray-500 mt-1">
+            Lanjutkan pekerjaan dan checklist harian
+          </p>
+        </button>
+
+        <button className="rounded-2xl border border-gray-200 p-5 text-left hover:bg-gray-50 transition">
+          <p className="text-sm font-semibold text-gray-900">
+            Ringkasan Laporan Harian
+          </p>
+
+          <p className="text-xs text-gray-500 mt-1">
+            3 pekerjaan sedang berjalan
+          </p>
+        </button>
+      </div>
+    </div>
+  </div>
+) : (
+  <>
+    {/* Messages */}
+    <div className="flex-1 px-6 py-6 overflow-y-auto bg-white">
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <div className="h-px bg-gray-100 flex-1" />
+
+          <span className="text-xs text-gray-400">
+            Hari ini
+          </span>
+
+          <div className="h-px bg-gray-100 flex-1" />
+        </div>
+
+        {visibleMessages.map((msg) => {
+          const isMe = msg.sender === "me";
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
+                  isMe
+                    ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
+                    : "bg-gray-100 text-gray-800 rounded-[24px] rounded-bl-md"
+                }`}
+              >
+                <p className="leading-relaxed">
+                  {msg.text}
+                </p>
+
+                <div
+                  className={`mt-2 flex items-center justify-end gap-1 text-[10px] ${
+                    isMe ? "text-blue-100" : "text-gray-400"
+                  }`}
+                >
+                  <span>{msg.time}</span>
+
+                  {isMe && <span>✓✓</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Input */}
+    <div className="px-5 py-4 border-t border-gray-100 bg-white">
+      <div className="flex items-center gap-3">
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              sendMessage();
+            }
+          }}
+          placeholder="Tulis pesan..."
+          className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-[#001E8A]"
+        />
+
+        <button
+          onClick={sendMessage}
+          className="w-14 h-14 rounded-2xl bg-[#001E8A] text-white flex items-center justify-center hover:bg-[#00166b]"
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  </>
+)}
+</div>
+
+{showNewGroupModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+      <div className="flex items-center gap-3 mb-5">
+        <button
+          onClick={() => setShowNewGroupModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <h2 className="text-lg font-bold text-gray-900">
+          Grup Baru
+        </h2>
+      </div>
+
+      <input
+        value={newGroupName}
+        onChange={(e) => setNewGroupName(e.target.value)}
+        placeholder="Nama grup"
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#001E8A] mb-4"
+      />
+
+      <p className="text-sm font-semibold text-gray-700 mb-2">
+        Pilih anggota
+      </p>
+
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {chatUsers.map((user) => {
+          const checked = selectedMembers.includes(user.name);
+
+          return (
+            <button
+              key={user.name}
+              onClick={() => {
+                setShowChatMenu(false);
+                setSelectedMembers((prev) =>
+                  checked
+                    ? prev.filter((name) => name !== user.name)
+                    : [...prev, user.name]
+                );
+              }}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl text-left border ${
+                checked
+                  ? "border-[#001E8A] bg-blue-50"
+                  : "border-gray-100 hover:bg-gray-50"
+              }`}
+            >
+              <div className="w-9 h-9 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                {user.name.charAt(0)}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  {user.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user.status}
+                </p>
+              </div>
+
+              <div
+                className={`w-5 h-5 rounded-full border ${
+                  checked
+                    ? "bg-[#001E8A] border-[#001E8A]"
+                    : "border-gray-300"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
       <button
-        onClick={sendMessage}
-        className="w-14 h-14 rounded-2xl bg-[#001E8A] text-white flex items-center justify-center hover:bg-[#00166b]"
+        onClick={createGroup}
+        disabled={
+          !newGroupName.trim() ||
+          selectedMembers.length < 2
+        }
+        className={`w-full mt-5 py-3 rounded-xl text-white font-semibold transition ${
+          !newGroupName.trim() ||
+          selectedMembers.length < 2
+            ? "bg-[#001E8A]/40 cursor-not-allowed"
+            : "bg-[#001E8A] hover:bg-[#00166b]"
+        }`}
       >
-        <Send className="w-5 h-5" />
+        Buat Grup
       </button>
 
-                        </div>
-          </div>
+    </div>
+  </div>
+)}
+{showContactsModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+
+      <div className="flex items-center justify-between mb-5">
+
+        <div>
+          
+          <h2 className="text-lg font-bold text-gray-900">
+            Kontak Internal
+          </h2>
+
+          <p className="text-sm text-gray-500">
+            Daftar karyawan internal
+          </p>
         </div>
+
+        <button
+          onClick={() => setShowContactsModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+      </div>
+
+      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+
+        {[...chatUsers]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((user) => (
+
+            <button
+              key={user.name}
+              onClick={() => {
+                setShowChatMenu(false);
+
+                if (!activeChatNames.includes(user.name)) {
+                  setActiveChatNames((prev) => [
+                    ...prev,
+                    user.name,
+                  ]);
+                }
+
+                setSelectedUser(user);
+                setActiveRoom("private");
+                setMobileView("chat");
+                setShowEmptyScreen(false);
+                setShowContactsModal(false);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-left"
+            >
+
+              <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                {user.name.charAt(0)}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  {user.name}
+                </p>
+
+                <p className="text-xs text-gray-500">
+                  {user.status}
+                </p>
+              </div>
+
+            </button>
+
+        ))}
 
       </div>
     </div>
+  </div>
+)}
+    </div>
+  </div>
   );
 }
