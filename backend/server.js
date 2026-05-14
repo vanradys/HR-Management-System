@@ -207,7 +207,26 @@ app.post("/api/permissions/toggle", async (req, res) => {
   }
 });
 
-res.json(user);
+app.put("/api/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, role, status } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        name,
+        role,
+        status,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Gagal update user." });
+  }
+});
 
 app.get("/api/employees", authMiddleware, allowRoles("Admin", "HR", "Manager"), async (req, res) => {
   const employees = await prisma.employee.findMany({
