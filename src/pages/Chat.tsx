@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import {
   Search,
   Send,
@@ -8,6 +8,7 @@ import {
   X,
   ArrowLeft,
 } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
 
 const initialUsers = [
   { name: "Hafidz", status: "Online", color: "bg-green-500", unread: 2, favorite: false },
@@ -34,18 +35,30 @@ type ChatGroup = {
 };
 
 export default function Chat() {
+  const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [searchUser, setSearchUser] = useState("");
-  const [activeRoom, setActiveRoom] = useState<RoomType>("empty");  const [selectedGroupId, setSelectedGroupId] = useState("group");
+  const [messageSearch, setMessageSearch] = useState("");
+  const [activeRoom, setActiveRoom] = useState<RoomType>("empty");
+  const [selectedGroupId, setSelectedGroupId] = useState("group");
   const [chatFilter, setChatFilter] = useState<
   "all" | "unread" | "favorites" | "groups"
   >("all");
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
-  const [showEmptyScreen, setShowEmptyScreen] = useState(true);  const [newGroupName, setNewGroupName] = useState("");
+  const [showEmptyScreen, setShowEmptyScreen] = useState(true);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [renameGroupName, setRenameGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [selectedGroupMembersToAdd, setSelectedGroupMembersToAdd] = useState<string[]>([]);
+  const [showGroupMembersModal, setShowGroupMembersModal] = useState(false);
+  const [showGroupRenameModal, setShowGroupRenameModal] = useState(false);
+  const [showGroupAddMemberModal, setShowGroupAddMemberModal] = useState(false);
+  const [messageContextMenu, setMessageContextMenu] = useState<
+    { messageId: number; x: number; y: number } | null
+  >(null);
   const [groups, setGroups] = useState<ChatGroup[]>(() => {
   const savedGroups = localStorage.getItem("chat-groups");
 
@@ -54,7 +67,7 @@ export default function Chat() {
     : [
         {
           id: "group",
-          name: "Group Divisi",
+          name: "New Group",
           members: ["Hafidz", "Dika", "Sakti"],
           unread: 0,
           favorite: false,
@@ -161,11 +174,17 @@ useEffect(() => {
     ? selectedUser?.name
     : activeRoom === "group"
     ? selectedGroupId
+    : activeRoom === "announcement"
+    ? "announcement"
     : null;
 
-  const visibleMessages = messages.filter(
-    (msg) => msg.roomId === currentRoomId
-  );
+  const visibleMessages = messages
+    .filter((msg) => msg.roomId === currentRoomId)
+    .filter((msg) =>
+      messageSearch.trim()
+        ? msg.text.toLowerCase().includes(messageSearch.toLowerCase())
+        : true
+    );
 
   const filteredGroups = groups.filter((group) => {
   if (chatFilter === "groups") return true;
@@ -200,7 +219,7 @@ const getLastMessage = (roomId: string) => {
 };
 
 const sendMessage = () => {
-  if (!message.trim()) return;
+  if (!message.trim() || !currentRoomId) return;
 
   const newMessage: Message = {
     id: Date.now(),
@@ -215,6 +234,93 @@ const sendMessage = () => {
 
   setMessages((prev) => [...prev, newMessage]);
   setMessage("");
+
+  const replyTime = new Date(Date.now() + 1200).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (currentRoomId === "announcement") {
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          roomId: "announcement",
+          sender: "other",
+          text: "Pengumuman baru: tim akan mengadakan briefing siang ini.",
+          time: replyTime,
+        },
+      ]);
+
+      toast({
+        title: "Pengumuman baru",
+        description: "Ada pengumuman terbaru di channel Announcement.",
+      });
+    }, 1400);
+  } else if (activeRoom === "private") {
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          roomId: selectedUser.name,
+          sender: "other",
+          text: `Terima kasih, saya akan cek dan balas segera.`,
+          time: replyTime,
+        },
+      ]);
+
+      toast({
+        title: `Pesan dari ${selectedUser.name}`,
+        description: "Anda menerima balasan baru di chat privat.",
+      });
+    }, 1200);
+  } else if (activeRoom === "group") {
+    const group = groups.find((g) => g.id === selectedGroupId);
+    const replyFrom = group?.members[0] || "Tim";
+
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          roomId: selectedGroupId,
+          sender: "other",
+          text: `${replyFrom}: Terima kasih, saya sedang follow up sekarang.`,
+          time: replyTime,
+        },
+      ]);
+
+      toast({
+        title: `Pesan baru di ${group?.name ?? "grup"}`,
+        description: "Ada pesan baru dari anggota grup.",
+      });
+    }, 1200);
+  }
+};
+
+const convertMessageToTask = (messageId: number) => {
+  const sourceMessage = messages.find((msg) => msg.id === messageId);
+  if (!sourceMessage) return;
+
+  toast({
+    title: "Pesan dikonversi",
+    description: `Pesan "${sourceMessage.text.slice(0, 40)}" berhasil diubah menjadi tugas.`,
+  });
+  setMessageContextMenu(null);
+};
+
+const handleMessageContextMenu = (
+  e: MouseEvent<HTMLDivElement>,
+  messageId: number
+) => {
+  e.preventDefault();
+  setMessageContextMenu({
+    messageId,
+    x: e.clientX,
+    y: e.clientY,
+  });
 };
 
 const createGroup = () => {
@@ -563,6 +669,20 @@ const addChatToFavorites = () => {
         <p className="text-sm text-gray-500">
           {headerSubtitle}
         </p>
+
+        {activeRoom !== "empty" && (
+          <div className="mt-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={messageSearch}
+                onChange={(e) => setMessageSearch(e.target.value)}
+                placeholder="Cari pesan..."
+                className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
 
@@ -583,15 +703,71 @@ const addChatToFavorites = () => {
         aria-label="Close chat menu"
       />
 
-      <div className="absolute right-0 top-11 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
+      <div className="absolute right-0 top-11 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
 
         <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">
           Chat Options
         </p>
 
-        <button
-          onClick={() => {
-            if (activeRoom === "private") {
+        {activeRoom === "group" && (
+          <>
+            <button
+              onClick={() => {
+                setShowGroupMembersModal(true);
+                setShowChatMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+            >
+              Lihat Anggota
+            </button>
+
+            <button
+              onClick={() => {
+                setRenameGroupName(selectedGroup?.name ?? "");
+                setShowGroupRenameModal(true);
+                setShowChatMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+            >
+              Rename Group
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedGroupMembersToAdd([]);
+                setShowGroupAddMemberModal(true);
+                setShowChatMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+            >
+              Tambah Anggota
+            </button>
+
+            <button
+              onClick={() => {
+                if (selectedGroup) {
+                  setGroups((prev) =>
+                    prev.filter((group) => group.id !== selectedGroup.id)
+                  );
+                  setActiveRoom("empty");
+                  setShowEmptyScreen(true);
+                  setShowChatMenu(false);
+                  toast({
+                    title: "Keluar Grup",
+                    description: `Anda keluar dari ${selectedGroup.name}.`,
+                  });
+                }
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+            >
+              Keluar Grup
+            </button>
+          </>
+        )}
+
+        {activeRoom === "private" && (
+          <button
+            onClick={() => {
               setChatUsers((prev) =>
                 prev.map((user) =>
                   user.name === selectedUser.name
@@ -602,16 +778,15 @@ const addChatToFavorites = () => {
                     : user
                 )
               );
-            }
-
-            setShowChatMenu(false);
-          }}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-        >
-          {selectedUser.favorite
-            ? "Remove from Favorites"
-            : "Add to Favorites"}
-        </button>
+              setShowChatMenu(false);
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+          >
+            {selectedUser.favorite
+              ? "Remove from Favorites"
+              : "Add to Favorites"}
+          </button>
+        )}
 
       </div>
     </>
@@ -684,6 +859,7 @@ const addChatToFavorites = () => {
               className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
+                onContextMenu={(e) => handleMessageContextMenu(e, msg.id)}
                 className={`relative max-w-[72%] px-5 py-4 text-sm shadow-sm ${
                   isMe
                     ? "bg-[#001E8A] text-white rounded-[24px] rounded-br-md"
@@ -735,6 +911,27 @@ const addChatToFavorites = () => {
     </div>
   </>
 )}
+
+{messageContextMenu && (
+  <div
+    style={{ left: messageContextMenu.x, top: messageContextMenu.y }}
+    className="fixed z-50 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl"
+  >
+    <button
+      onClick={() => convertMessageToTask(messageContextMenu.messageId)}
+      className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+    >
+      Convert to task
+    </button>
+    <button
+      onClick={() => setMessageContextMenu(null)}
+      className="w-full px-4 py-3 text-left text-sm text-gray-500 hover:bg-gray-50"
+    >
+      Tutup
+    </button>
+  </div>
+)}
+
 </div>
 
 {showNewGroupModal && (
@@ -829,6 +1026,167 @@ const addChatToFavorites = () => {
     </div>
   </div>
 )}
+
+{showGroupMembersModal && selectedGroup && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Anggota Grup</h2>
+          <p className="text-sm text-gray-500">{selectedGroup.name}</p>
+        </div>
+        <button
+          onClick={() => setShowGroupMembersModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {selectedGroup.members.map((member) => (
+          <div key={member} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
+            <div className="w-10 h-10 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+              {member.charAt(0)}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{member}</p>
+              <p className="text-xs text-gray-500">Anggota grup</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+{showGroupRenameModal && selectedGroup && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+      <div className="flex items-center gap-3 mb-5">
+        <button
+          onClick={() => setShowGroupRenameModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <h2 className="text-lg font-bold text-gray-900">Rename Group</h2>
+      </div>
+
+      <input
+        value={renameGroupName}
+        onChange={(e) => setRenameGroupName(e.target.value)}
+        placeholder="Nama grup baru"
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#001E8A] mb-4"
+      />
+
+      <button
+        onClick={() => {
+          if (!selectedGroup || !renameGroupName.trim()) return;
+          setGroups((prev) =>
+            prev.map((group) =>
+              group.id === selectedGroup.id
+                ? { ...group, name: renameGroupName }
+                : group
+            )
+          );
+          setShowGroupRenameModal(false);
+          toast({
+            title: "Group renamed",
+            description: `Nama grup diubah menjadi ${renameGroupName}.`,
+          });
+        }}
+        className={`w-full mt-5 py-3 rounded-xl text-white font-semibold bg-[#001E8A] hover:bg-[#00166b]`}
+      >
+        Simpan
+      </button>
+    </div>
+  </div>
+)}
+
+{showGroupAddMemberModal && selectedGroup && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Tambah Anggota</h2>
+          <p className="text-sm text-gray-500">{selectedGroup.name}</p>
+        </div>
+        <button
+          onClick={() => setShowGroupAddMemberModal(false)}
+          className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {chatUsers
+          .filter((user) => !selectedGroup.members.includes(user.name))
+          .map((user) => {
+            const checked = selectedGroupMembersToAdd.includes(user.name);
+            return (
+              <button
+                key={user.name}
+                onClick={() => {
+                  setSelectedGroupMembersToAdd((prev) =>
+                    checked
+                      ? prev.filter((name) => name !== user.name)
+                      : [...prev, user.name]
+                  );
+                }}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left border ${
+                  checked
+                    ? "border-[#001E8A] bg-blue-50"
+                    : "border-gray-100 hover:bg-gray-50"
+                }`}
+              >
+                <div className="w-9 h-9 rounded-full bg-[#001E8A] text-white flex items-center justify-center font-bold">
+                  {user.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                  <p className="text-xs text-gray-500">{user.status}</p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border ${checked ? "bg-[#001E8A] border-[#001E8A]" : "border-gray-300"}`} />
+              </button>
+            );
+          })}
+      </div>
+
+      <button
+        onClick={() => {
+          if (!selectedGroup || selectedGroupMembersToAdd.length === 0) return;
+          setGroups((prev) =>
+            prev.map((group) =>
+              group.id === selectedGroup.id
+                ? {
+                    ...group,
+                    members: [...group.members, ...selectedGroupMembersToAdd],
+                  }
+                : group
+            )
+          );
+          setSelectedGroupMembersToAdd([]);
+          setShowGroupAddMemberModal(false);
+          toast({
+            title: "Anggota ditambahkan",
+            description: `${selectedGroupMembersToAdd.length} anggota baru ditambahkan ke grup.`,
+          });
+        }}
+        disabled={selectedGroupMembersToAdd.length === 0}
+        className={`w-full mt-5 py-3 rounded-xl text-white font-semibold transition ${
+          selectedGroupMembersToAdd.length === 0
+            ? "bg-[#001E8A]/40 cursor-not-allowed"
+            : "bg-[#001E8A] hover:bg-[#00166b]"
+        }`}
+      >
+        Tambah Anggota
+      </button>
+    </div>
+  </div>
+)}
+
 {showContactsModal && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
