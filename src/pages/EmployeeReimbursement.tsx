@@ -119,8 +119,15 @@ function isManagementRole(role: string) {
 }
 
 export default function EmployeeReimbursement() {
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
+  const currentDate = new Date();
+
+  const [month, setMonth] = useState(
+  String(currentDate.getMonth() + 1)
+  );
+
+  const [year, setYear] = useState(
+    String(currentDate.getFullYear())
+  );  
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -150,13 +157,42 @@ export default function EmployeeReimbursement() {
   }, [allowedData, month, year, startDate, endDate]);
 
   const summary = useMemo(() => {
+    const filterLabel = useMemo(() => {
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    if (startDate && endDate) {
+      return `Periode ${formatDate(startDate)} - ${formatDate(endDate)}`;
+    }
+
+    if (month && year) {
+      return `Bulan ${monthNames[Number(month) - 1]} ${year}`;
+    }
+
+    return `Bulan ${
+      monthNames[new Date().getMonth()]
+    } ${new Date().getFullYear()}`;
+  }, [month, year, startDate, endDate]);
     return {
       total: filteredData.reduce((sum, item) => sum + item.amount, 0),
       approved: filteredData
         .filter((item) => item.status === "Disetujui")
         .reduce((sum, item) => sum + item.amount, 0),
-      pending: filteredData.filter((item) => item.status === "Pending").length,
-      paid: filteredData
+      pending: filteredData
+        .filter((item) => item.status === "Pending")
+        .reduce((sum, item) => sum + item.amount, 0),      paid: filteredData
         .filter((item) => item.paymentStatus === "Sudah Dibayar")
         .reduce((sum, item) => sum + item.amount, 0),
     };
@@ -200,12 +236,14 @@ export default function EmployeeReimbursement() {
 
           <button
             type="button"
-            onClick={() => {
-              setMonth("");
-              setYear("");
-              setStartDate("");
-              setEndDate("");
-            }}
+              onClick={() => {
+                const now = new Date();
+
+                setMonth(String(now.getMonth() + 1));
+                setYear(String(now.getFullYear()));
+                setStartDate("");
+                setEndDate("");
+              }}  
             className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             Reset Filter
@@ -266,24 +304,28 @@ export default function EmployeeReimbursement() {
           title="Total Reimbursement"
           value={formatRupiah(summary.total)}
           icon={<FileText size={20} />}
+          filterLabel="{filterLabel}"
           color="red"
         />
         <SummaryCard
           title="Total Disetujui"
           value={formatRupiah(summary.approved)}
           icon={<CheckIcon />}
+          filterLabel="{filterLabel}"
           color="green"
         />
         <SummaryCard
           title="Total Pending"
           value={String(summary.pending)}
           icon={<Calendar size={20} />}
+          filterLabel="{filterLabel}"
           color="yellow"
         />
         <SummaryCard
           title="Total Sudah Dibayar"
           value={formatRupiah(summary.paid)}
           icon={<CreditCard size={20} />}
+          filterLabel="{filterLabel}"
           color="blue"
         />
       </div>
@@ -358,12 +400,15 @@ function SummaryCard({
   value,
   icon,
   color,
+  filterLabel,
 }: {
   title: string;
   value: string;
   icon: React.ReactNode;
   color: "red" | "green" | "yellow" | "blue";
+  filterLabel: string;
 }) {
+
   const styles = {
     red: "bg-red-50 border-red-200 text-red-700",
     green: "bg-green-50 border-green-200 text-green-700",
@@ -378,6 +423,10 @@ function SummaryCard({
         {icon}
       </div>
       <p className="mt-3 text-2xl font-extrabold">{value}</p>
+
+      <p className="text-xs text-gray-400 mt-2">
+        {filterLabel}
+      </p>
     </div>
   );
 }
